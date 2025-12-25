@@ -1,0 +1,38 @@
+[
+    {
+        "segment_id": 1,
+        "fault": "Surface_Crack",
+        "confidence": 1.0,
+        "priority": 2,
+        "action": "Schedule preventive maintenance",
+        "explanation": {
+            "summary": "The system predicts Surface_Crack with confidence 1.0.",
+            "key_factors": "wear level, vibration index",
+            "explanation": "The decision is primarily influenced by wear level, vibration index, which indicate progressive infrastructure degradation."
+        }
+    },
+    {
+        "segment_id": 2,
+        "fault": "Surface_Crack",
+        "confidence": 0.73,
+        "priority": 2,
+        "action": "Schedule preventive maintenance",
+        "explanation": {
+            "summary": "The system predicts Surface_Crack with confidence 0.73.",
+            "key_factors": "wear level, vibration index",
+            "explanation": "The decision is primarily influenced by wear level, vibration index, which indicate progressive infrastructure degradation."
+        }
+    },
+    {
+        "segment_id": 3,
+        "fault": "Severe_Degradation",
+        "confidence": 0.838,
+        "priority": 4,
+        "action": "Immediate maintenance required",
+        "explanation": {
+            "summary": "The system predicts Severe_Degradation with confidence 0.838.",
+            "key_factors": "wear level, vibration index",
+            "explanation": "The decision is primarily influenced by wear level, vibration index, which indicate progressive infrastructure degradation."
+        }
+    }
+]
