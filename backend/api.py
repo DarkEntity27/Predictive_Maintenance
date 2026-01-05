@@ -5,6 +5,9 @@ from typing import List
 from .services.maintenance_service import MaintenanceService
 from fastapi.middleware.cors import CORSMiddleware
 
+from dotenv import load_dotenv
+load_dotenv()
+
 app = FastAPI(
     title="Multi-Agent Predictive Maintenance API",
     description="Backend service for railway track maintenance assessment",

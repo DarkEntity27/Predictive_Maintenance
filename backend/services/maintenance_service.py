@@ -3,6 +3,7 @@ from ..agents.decision_agent import DecisionAgent
 from ..agents.explanation_agent import ExplanationAgent
 from ..agents.summary_agent import SummaryAgent
 from ..services.llm_service import LLMService
+from ..services.notification_service import NotificationService
 
 class MaintenanceService:
     def __init__(self):
@@ -11,14 +12,23 @@ class MaintenanceService:
         self.explainer = ExplanationAgent()
         self.summary_agent = SummaryAgent()
         self.llm = LLMService()
+        self.notifier = NotificationService()
 
-    def assess_segment(self, features, feature_importance):
+    def assess_segment(self, features, feature_importance,segment_id=None):
         fault, confidence = self.predictor.predict(features)
         decision = self.decision.decide(fault)
         explanation = self.explainer.explain(
             fault, confidence, feature_importance
         )
-
+        print("FAULT:", fault, "PRIORITY:", decision["priority"])
+        if fault == "Severe_Degradation" or decision["priority"] >= 3:
+            if segment_id is not None:
+                self.notifier.send_alert(
+                    segment_id=segment_id,
+                    fault=fault,
+                    priority=decision["priority"],
+                    confidence=confidence
+                )
         return {
             "fault": fault,
             "confidence": confidence,
@@ -45,7 +55,8 @@ class MaintenanceService:
         for segment in segments:
             result = self.assess_segment(
                 segment["features"],
-                feature_importance
+                feature_importance,
+                segment_id=segment["segment_id"]
             )
 
             results.append({
