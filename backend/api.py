@@ -3,13 +3,20 @@ from pydantic import BaseModel
 from typing import List
 
 from .services.maintenance_service import MaintenanceService
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Multi-Agent Predictive Maintenance API",
     description="Backend service for railway track maintenance assessment",
     version="1.0"
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # OK for local dev
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 service = MaintenanceService()
 
 # -----------------------------
