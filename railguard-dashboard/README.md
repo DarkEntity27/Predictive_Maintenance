@@ -54,19 +54,14 @@ A modern, TypeScript-based web application for AI-powered railway track predicti
 
 The application requires the FastAPI backend to be running:
 
-1. Navigate to the backend directory:
-   ```bash
-   cd ../backend
-   ```
-
-2. Install Python dependencies:
+1. Install Python dependencies:
    ```bash
    pip install fastapi uvicorn python-dotenv
    ```
 
-3. Start the API server:
+2. Start the API server:
    ```bash
-   uvicorn api:app --reload
+   python -m uvicorn backend.api:app --reload --host 127.0.0.1 --port 8000
    ```
    The API will be available at `http://127.0.0.1:8000`
 
