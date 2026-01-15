@@ -9,11 +9,15 @@ class NotificationService:
         self.sender_email = os.getenv("ALERT_SENDER_EMAIL")
         self.sender_password = os.getenv("ALERT_EMAIL_PASSWORD")
         self.receiver_email = os.getenv("ALERT_RECEIVER_EMAIL")
-        print("Sender:", self.sender_email)
-        print("Receiver:", self.receiver_email)
-        print("ENV CHECK:", self.sender_email)
-        if not all([self.sender_email, self.sender_password, self.receiver_email]):
-            raise RuntimeError("Email alert environment variables not set")
+        
+        # Check if email is configured
+        self.enabled = all([self.sender_email, self.sender_password, self.receiver_email])
+        
+        if not self.enabled:
+            print("WARNING: Email notifications not configured. Alerts will be logged only.")
+        else:
+            print("Sender:", self.sender_email)
+            print("Receiver:", self.receiver_email)
 
     def send_alert(self, segment_id, fault, priority, confidence):
         subject = f"🚨 Predictive Maintenance Alert | Segment {segment_id}"
@@ -28,6 +32,12 @@ Prediction Confidence: {confidence:.2f}
 
 Immediate maintenance action is recommended.
 """
+        
+        # If email not configured, just log the alert
+        if not self.enabled:
+            print(f"\n[ALERT] {subject}")
+            print(body)
+            return
 
         msg = MIMEMultipart()
         msg["From"] = self.sender_email
