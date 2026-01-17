@@ -47,10 +47,13 @@ const LandingPage: React.FC = () => {
         </p>
         <div className="hero-actions">
           <button className="btn-hero" onClick={() => navigate('/dashboard')}>
-            <Activity size={20} />
-            Launch Dashboard
+            <Train size={20} />
+            Track Maintenance
           </button>
-          <button className="btn-secondary">View Documentation</button>
+          <button className="btn-hero-secondary" onClick={() => navigate('/apu-dashboard')}>
+            <Activity size={20} />
+            Metro APU Dashboard
+          </button>
         </div>
       </section>
 

@@ -48,6 +48,50 @@ export interface BatchRequest {
   segments: SegmentInput[];
 }
 
+// Metro APU Types
+export interface APUPredictRequest {
+  sensor_window: number[][];  // 180 timesteps x 15 features
+  car_id: number;
+}
+
+export interface APULocation {
+  car_id: number;
+  zone: string;
+  system: string;
+}
+
+export interface APUPredictResponse {
+  rul_hours: number;
+  priority: number;
+  severity: 'CRITICAL' | 'WARNING' | 'NORMAL';
+  confidence: number;
+  location: APULocation;
+  action: string;
+}
+
+export interface APUSensorData {
+  [key: string]: number;
+}
+
+export interface MetroCar {
+  id: number;
+  name: string;
+  rul: number;
+  status: 'Critical' | 'Warning' | 'Normal';
+  confidence: number;
+  sensors: APUSensorData;
+}
+
+export interface MaintenanceHistory {
+  car_id: number;
+  car_name: string;
+  maintenance_type: string;
+  date: string;
+  rul_before: number;
+  rul_after: number;
+  status: 'Completed' | 'In Progress' | 'Scheduled';
+}
+
 export type PriorityLevel = 1 | 2 | 3 | 4;
 
 export interface PriorityColorMap {
