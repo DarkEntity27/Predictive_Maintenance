@@ -63,9 +63,21 @@ export interface NetworkSummaryStructured {
   critical_count: number;
 }
 
+export interface NetworkPath {
+  path_found: boolean;
+  stations_involved: string[];
+  total_time_min: number;
+  total_distance_km: number;
+  delay_min: number;
+  blocked_segments: number[];
+  graph_data: GraphData & { blocked_edges: { source: string; target: string }[] };
+  error?: string;
+}
+
 export interface NetworkSummary {
   structured: NetworkSummaryStructured;
   narrative: string;
+  network_path: NetworkPath;
 }
 
 export interface NetworkAssessmentResponse {

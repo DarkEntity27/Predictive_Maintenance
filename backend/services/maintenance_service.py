@@ -89,11 +89,20 @@ class MaintenanceService:
             summary_context
         )
 
+        # Calculate network-wide path (Master Graph)
+        critical_segment_ids = [
+            s["segment_id"] for s in segment_results 
+            if s["priority"] >= 3 or s["fault"] == "Severe_Degradation"
+        ]
+        
+        network_path = self.diversion_service.get_network_path(critical_segment_ids)
+
         return {
             "segments": segment_results,
             "network_summary": {
                 "structured": summary_context,
-                "narrative": network_summary_text
+                "narrative": network_summary_text,
+                "network_path": network_path
             }
         }
 

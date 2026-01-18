@@ -100,3 +100,66 @@ class DiversionService:
             return {
                 "error": "No diversion path available. Track is completely isolated."
             }
+
+    def get_network_path(self, blocked_segment_ids):
+        """
+        Calculate best path from Station_A to Station_E considering ALL blocked segments.
+        """
+        temp_graph = self.graph.copy()
+        blocked_edges = []
+
+        # Remove all blocked segments
+        for u, v, data in self.graph.edges(data=True):
+            if data.get('segment_id') in blocked_segment_ids:
+                if temp_graph.has_edge(u, v):
+                    temp_graph.remove_edge(u, v)
+                    blocked_edges.append({"source": u, "target": v})
+
+        # Calculate optimal path (A -> E)
+        start_node = "Station_A"
+        end_node = "Station_E"
+        
+        # Base time (optimal) - assuming A->B->C->D->E is optimal
+        # 12 + 18 + 14 + 25 = 69 min
+        optimal_time = 69 
+
+        try:
+            path = nx.shortest_path(temp_graph, source=start_node, target=end_node, weight='time_min')
+            
+            total_time = 0
+            total_distance = 0
+            
+            for i in range(len(path) - 1):
+                p_u, p_v = path[i], path[i+1]
+                edge_data = temp_graph.get_edge_data(p_u, p_v)
+                total_time += edge_data['time_min']
+                total_distance += edge_data['length_km']
+            
+            delay = max(0, total_time - optimal_time)
+
+            return {
+                "path_found": True,
+                "stations_involved": path,
+                "total_time_min": total_time,
+                "total_distance_km": total_distance,
+                "delay_min": delay,
+                "blocked_segments": blocked_segment_ids,
+                "graph_data": {
+                    "nodes": [{"id": n, **self.graph.nodes[n]['pos']} for n in self.graph.nodes()],
+                    "edges": [{"source": u, "target": v, "segment_id": d['segment_id']} for u, v, d in self.graph.edges(data=True)],
+                    "blocked_edges": blocked_edges
+                }
+            }
+
+        except nx.NetworkXNoPath:
+            return {
+                "path_found": False,
+                "error": "Network is severed. No path from A to E.",
+                "blocked_segments": blocked_segment_ids,
+                "stations_involved": [],
+                 "graph_data": {
+                    "nodes": [{"id": n, **self.graph.nodes[n]['pos']} for n in self.graph.nodes()],
+                    "edges": [{"source": u, "target": v, "segment_id": d['segment_id']} for u, v, d in self.graph.edges(data=True)],
+                    "blocked_edges": blocked_edges
+                }
+            }

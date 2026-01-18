@@ -3,7 +3,7 @@ import { GraphData } from '../types';
 import { Train } from 'lucide-react';
 
 interface NetworkMapProps {
-    data: GraphData;
+    data: GraphData & { blocked_edges?: { source: string; target: string }[] };
     diversionPath: string[]; // List of station IDs
 }
 
@@ -67,14 +67,20 @@ const NetworkMap: React.FC<NetworkMapProps> = ({ data, diversionPath }) => {
                     if (!u || !v) return null;
 
                     const isBlocked =
-                        (edge.source === data.blocked_edge.source && edge.target === data.blocked_edge.target) ||
-                        (edge.source === data.blocked_edge.target && edge.target === data.blocked_edge.source);
+                        (data.blocked_edge &&
+                            ((edge.source === data.blocked_edge.source && edge.target === data.blocked_edge.target) ||
+                                (edge.source === data.blocked_edge.target && edge.target === data.blocked_edge.source))) ||
+                        (data.blocked_edges && data.blocked_edges.some(be =>
+                            (edge.source === be.source && edge.target === be.target) ||
+                            (edge.source === be.target && edge.target === be.source)
+                        ));
 
                     // Check if this edge is part of the diversion path
+                    const safeDiversionPath = diversionPath || [];
                     const isDiversion =
-                        diversionPath.includes(edge.source) &&
-                        diversionPath.includes(edge.target) &&
-                        Math.abs(diversionPath.indexOf(edge.source) - diversionPath.indexOf(edge.target)) === 1;
+                        safeDiversionPath.includes(edge.source) &&
+                        safeDiversionPath.includes(edge.target) &&
+                        Math.abs(safeDiversionPath.indexOf(edge.source) - safeDiversionPath.indexOf(edge.target)) === 1;
 
                     return (
                         <line

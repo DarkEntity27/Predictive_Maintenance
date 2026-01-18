@@ -453,6 +453,43 @@ const Dashboard: React.FC = () => {
                     </div>
                   </section>
 
+                  {/* Master Network Graph (Overview) */}
+                  {assessmentData.network_summary.network_path && (
+                    <section className="section">
+                      <div className="section-header">
+                        <GitMerge size={20} />
+                        <h2>Master Network View</h2>
+                      </div>
+                      <div className="network-master-view" style={{ background: '#1e293b', padding: '20px', borderRadius: '8px' }}>
+                        <div className="network-stats" style={{ display: 'flex', gap: '30px', marginBottom: '20px', borderBottom: '1px solid rgba(148, 163, 184, 0.1)', paddingBottom: '15px' }}>
+                          <div className="stat-item">
+                            <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Network Status</span>
+                            <div className="value" style={{ color: assessmentData.network_summary.network_path.path_found ? '#10b981' : '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                              {assessmentData.network_summary.network_path.path_found ? 'OPERATIONAL' : 'SEVERED'}
+                            </div>
+                          </div>
+                          <div className="stat-item">
+                            <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Total Delay</span>
+                            <div className="value" style={{ color: '#e2e8f0', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                              {assessmentData.network_summary.network_path.delay_min} min
+                            </div>
+                          </div>
+                          <div className="stat-item">
+                            <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Blocked Segments</span>
+                            <div className="value" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                              {assessmentData.network_summary.network_path.blocked_segments.length}
+                            </div>
+                          </div>
+                        </div>
+
+                        <NetworkMap
+                          data={assessmentData.network_summary.network_path.graph_data}
+                          diversionPath={assessmentData.network_summary.network_path.stations_involved}
+                        />
+                      </div>
+                    </section>
+                  )}
+
                   {/* Segment Assessment Table */}
                   <section className="section">
                     <div className="section-header">
@@ -632,6 +669,44 @@ const Dashboard: React.FC = () => {
                           )}
                         </div>
                       </div>
+
+                      {/* Master Network Graph */}
+                      {assessmentData.network_summary.network_path && (
+                        <div className="report-section" style={{ marginTop: '20px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                            <GitMerge size={20} className="text-warning" />
+                            <h4 style={{ margin: 0 }}>Master Network View</h4>
+                          </div>
+
+                          <div className="network-master-view" style={{ background: '#1e293b', padding: '20px', borderRadius: '8px' }}>
+                            <div className="network-stats" style={{ display: 'flex', gap: '30px', marginBottom: '20px', borderBottom: '1px solid rgba(148, 163, 184, 0.1)', paddingBottom: '15px' }}>
+                              <div className="stat-item">
+                                <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Network Status</span>
+                                <div className="value" style={{ color: assessmentData.network_summary.network_path.path_found ? '#10b981' : '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                  {assessmentData.network_summary.network_path.path_found ? 'OPERATIONAL' : 'SEVERED'}
+                                </div>
+                              </div>
+                              <div className="stat-item">
+                                <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Total Delay</span>
+                                <div className="value" style={{ color: '#e2e8f0', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                  {assessmentData.network_summary.network_path.delay_min} min
+                                </div>
+                              </div>
+                              <div className="stat-item">
+                                <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Blocked Segments</span>
+                                <div className="value" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                  {assessmentData.network_summary.network_path.blocked_segments.length}
+                                </div>
+                              </div>
+                            </div>
+
+                            <NetworkMap
+                              data={assessmentData.network_summary.network_path.graph_data}
+                              diversionPath={assessmentData.network_summary.network_path.stations_involved}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
