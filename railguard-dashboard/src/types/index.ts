@@ -13,6 +13,34 @@ export interface SegmentInput {
   features: number[]; // [wear, alignment, vibration, env, load]
 }
 
+export interface GraphNode {
+  id: string;
+  x: number;
+  y: number;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  segment_id: number;
+}
+
+export interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  blocked_edge: { source: string; target: string };
+}
+
+export interface DiversionPlan {
+  original_segment: number;
+  diversion_path: string[];
+  total_distance_km: number;
+  estimated_time_min: number;
+  delay_min: number;
+  stations_involved: string[];
+  graph_data: GraphData;
+}
+
 export interface SegmentResult {
   segment_id: number;
   fault: string;
@@ -20,6 +48,7 @@ export interface SegmentResult {
   priority: number;
   action: string;
   explanation?: string;
+  diversion_plan?: DiversionPlan;
 }
 
 export interface FaultDistribution {

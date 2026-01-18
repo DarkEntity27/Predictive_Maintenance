@@ -4,6 +4,7 @@ from ..agents.explanation_agent import ExplanationAgent
 from ..agents.summary_agent import SummaryAgent
 from ..services.llm_service import LLMService
 from ..services.notification_service import NotificationService
+from ..services.diversion_service import DiversionService
 
 class MaintenanceService:
     def __init__(self):
@@ -13,6 +14,7 @@ class MaintenanceService:
         self.summary_agent = SummaryAgent()
         self.llm = LLMService()
         self.notifier = NotificationService()
+        self.diversion_service = DiversionService()
 
     def assess_segment(self, features, feature_importance,segment_id=None):
         fault, confidence = self.predictor.predict(features)
@@ -21,6 +23,7 @@ class MaintenanceService:
             fault, confidence, feature_importance
         )
         print("FAULT:", fault, "PRIORITY:", decision["priority"])
+        diversion_plan = None
         if fault == "Severe_Degradation" or decision["priority"] >= 3:
             if segment_id is not None:
                 self.notifier.send_alert(
@@ -29,12 +32,16 @@ class MaintenanceService:
                     priority=decision["priority"],
                     confidence=confidence
                 )
+                # Calculate diversion plan for critical issues
+                diversion_plan = self.diversion_service.get_diversion_plan(segment_id)
+
         return {
             "fault": fault,
             "confidence": confidence,
             "priority": decision["priority"],
             "action": decision["action"],
-            "explanation": explanation
+            "explanation": explanation,
+            "diversion_plan": diversion_plan
         }
 
     # ✅ NEW: batch assessment

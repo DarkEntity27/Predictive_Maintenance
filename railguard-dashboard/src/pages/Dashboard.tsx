@@ -14,10 +14,13 @@ import {
   TrendingUp,
   ExternalLink,
   Download,
+  GitMerge,
+  X,
 } from 'lucide-react';
 import { maintenanceApi } from '../services/api';
-import { SegmentInput, NetworkAssessmentResponse } from '../types';
+import { SegmentInput, NetworkAssessmentResponse, DiversionPlan } from '../types';
 import { getPriorityLabel, formatConfidence, getPriorityColor } from '../utils/helpers';
+import NetworkMap from '../components/NetworkMap';
 import './Dashboard.css';
 
 interface SegmentState {
@@ -47,6 +50,7 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'reports' | 'settings'>('overview');
   const [assessmentHistory, setAssessmentHistory] = useState<Array<{ timestamp: string; data: NetworkAssessmentResponse }>>([]);
+  const [selectedDiversion, setSelectedDiversion] = useState<DiversionPlan | null>(null);
 
   const updateSegment = (index: number, field: keyof SegmentState, value: number) => {
     const newSegments = [...segments];
@@ -328,177 +332,190 @@ const Dashboard: React.FC = () => {
                 <>
                   {/* Network Summary */}
                   <section className="section">
-                <div className="section-header">
-                  <LayoutGrid size={20} />
-                  <h2>Network-Level Summary</h2>
-                </div>
-
-                <div className="metrics-grid">
-                  <div className="metric-card">
-                    <div className="metric-icon">
-                      <LayoutGrid size={24} />
+                    <div className="section-header">
+                      <LayoutGrid size={20} />
+                      <h2>Network-Level Summary</h2>
                     </div>
-                    <div className="metric-content">
-                      <div className="metric-value">
-                        {assessmentData.network_summary.structured.total_segments}
+
+                    <div className="metrics-grid">
+                      <div className="metric-card">
+                        <div className="metric-icon">
+                          <LayoutGrid size={24} />
+                        </div>
+                        <div className="metric-content">
+                          <div className="metric-value">
+                            {assessmentData.network_summary.structured.total_segments}
+                          </div>
+                          <div className="metric-label">Total Segments</div>
+                        </div>
                       </div>
-                      <div className="metric-label">Total Segments</div>
-                    </div>
-                  </div>
 
-                  <div className="metric-card">
-                    <div className="metric-icon warning">
-                      <AlertTriangle size={24} />
-                    </div>
-                    <div className="metric-content">
-                      <div className="metric-value">
-                        {assessmentData.network_summary.structured.high_priority_segments.length}
+                      <div className="metric-card">
+                        <div className="metric-icon warning">
+                          <AlertTriangle size={24} />
+                        </div>
+                        <div className="metric-content">
+                          <div className="metric-value">
+                            {assessmentData.network_summary.structured.high_priority_segments.length}
+                          </div>
+                          <div className="metric-label">High Priority</div>
+                          <div className="metric-sublabel">Requires attention</div>
+                        </div>
                       </div>
-                      <div className="metric-label">High Priority</div>
-                      <div className="metric-sublabel">Requires attention</div>
-                    </div>
-                  </div>
 
-                  <div className="metric-card">
-                    <div className="metric-icon success">
-                      <CheckCircle size={24} />
-                    </div>
-                    <div className="metric-content">
-                      <div className="metric-value">
-                        {assessmentData.network_summary.structured.total_segments -
-                          assessmentData.network_summary.structured.high_priority_segments.length}
+                      <div className="metric-card">
+                        <div className="metric-icon success">
+                          <CheckCircle size={24} />
+                        </div>
+                        <div className="metric-content">
+                          <div className="metric-value">
+                            {assessmentData.network_summary.structured.total_segments -
+                              assessmentData.network_summary.structured.high_priority_segments.length}
+                          </div>
+                          <div className="metric-label">Healthy Segments</div>
+                        </div>
                       </div>
-                      <div className="metric-label">Healthy Segments</div>
-                    </div>
-                  </div>
 
-                  <div className="metric-card">
-                    <div className="metric-icon">
-                      <TrendingUp size={24} />
-                    </div>
-                    <div className="metric-content">
-                      <div className="metric-value">
-                        {(assessmentData.network_summary.structured.average_confidence * 100).toFixed(
-                          1
-                        )}
-                        %
+                      <div className="metric-card">
+                        <div className="metric-icon">
+                          <TrendingUp size={24} />
+                        </div>
+                        <div className="metric-content">
+                          <div className="metric-value">
+                            {(assessmentData.network_summary.structured.average_confidence * 100).toFixed(
+                              1
+                            )}
+                            %
+                          </div>
+                          <div className="metric-label">Avg. Confidence</div>
+                          <div className="metric-sublabel">Model prediction accuracy</div>
+                        </div>
                       </div>
-                      <div className="metric-label">Avg. Confidence</div>
-                      <div className="metric-sublabel">Model prediction accuracy</div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="ai-summary-section">
-                  <div className="ai-summary-header">
-                    <Activity size={20} />
-                    <h3>AI-Generated Summary</h3>
-                  </div>
-                  <div className="ai-summary-content">
-                    {assessmentData.network_summary.narrative}
-                  </div>
-                </div>
-              </section>
-
-              {/* Track Visualization */}
-              <section className="section">
-                <div className="section-header">
-                  <Train size={20} />
-                  <h2>Track Visualization</h2>
-                </div>
-                <div className="track-visualization">
-                  {assessmentData.segments.map((seg) => (
-                    <div
-                      key={seg.segment_id}
-                      className={`track-segment priority-${seg.priority}`}
-                      style={{ backgroundColor: getPriorityColor(seg.priority) }}
-                    >
-                      #{seg.segment_id}
+                    <div className="ai-summary-section">
+                      <div className="ai-summary-header">
+                        <Activity size={20} />
+                        <h3>AI-Generated Summary</h3>
+                      </div>
+                      <div className="ai-summary-content">
+                        {assessmentData.network_summary.narrative}
+                      </div>
                     </div>
-                  ))}
-                </div>
-                <div className="track-legend">
-                  <div className="legend-item">
-                    <span className="legend-color" style={{ backgroundColor: '#ef4444' }}></span>
-                    Critical
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-color" style={{ backgroundColor: '#f97316' }}></span>
-                    High
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-color" style={{ backgroundColor: '#f59e0b' }}></span>
-                    Medium
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-color" style={{ backgroundColor: '#10b981' }}></span>
-                    Low
-                  </div>
-                </div>
-                
-                <div className="visualization-buttons">
-                  <a 
-                    href="/visualization/index.html" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="btn-visualization"
-                  >
-                    View 3D Visualization
-                    <ExternalLink size={16} />
-                  </a>
-                </div>
-              </section>
+                  </section>
 
-              {/* Segment Assessment Table */}
-              <section className="section">
-                <div className="section-header">
-                  <Settings size={20} />
-                  <h2>Segment-wise Assessment</h2>
-                </div>
-                <div className="table-container">
-                  <table className="assessment-table">
-                    <thead>
-                      <tr>
-                        <th>Segment ID</th>
-                        <th>Fault</th>
-                        <th>Confidence</th>
-                        <th>Priority Level</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  {/* Track Visualization */}
+                  <section className="section">
+                    <div className="section-header">
+                      <Train size={20} />
+                      <h2>Track Visualization</h2>
+                    </div>
+                    <div className="track-visualization">
                       {assessmentData.segments.map((seg) => (
-                        <tr key={seg.segment_id}>
-                          <td>
-                            <span className="segment-id-badge">{seg.segment_id}</span>
-                          </td>
-                          <td>
-                            <span className="fault-badge">{seg.fault.replace(/_/g, ' ')}</span>
-                          </td>
-                          <td>
-                            <div className="confidence-bar">
-                              <div
-                                className="confidence-fill"
-                                style={{ width: `${seg.confidence * 100}%` }}
-                              ></div>
-                              <span className="confidence-text">{formatConfidence(seg.confidence)}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <span
-                              className={`priority-badge priority-${seg.priority}`}
-                              style={{ backgroundColor: getPriorityColor(seg.priority) }}
-                            >
-                              {getPriorityLabel(seg.priority)}
-                            </span>
-                          </td>
-                          <td className="action-cell">{seg.action}</td>
-                        </tr>
+                        <div
+                          key={seg.segment_id}
+                          className={`track-segment priority-${seg.priority}`}
+                          style={{ backgroundColor: getPriorityColor(seg.priority) }}
+                        >
+                          #{seg.segment_id}
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
+                    </div>
+                    <div className="track-legend">
+                      <div className="legend-item">
+                        <span className="legend-color" style={{ backgroundColor: '#ef4444' }}></span>
+                        Critical
+                      </div>
+                      <div className="legend-item">
+                        <span className="legend-color" style={{ backgroundColor: '#f97316' }}></span>
+                        High
+                      </div>
+                      <div className="legend-item">
+                        <span className="legend-color" style={{ backgroundColor: '#f59e0b' }}></span>
+                        Medium
+                      </div>
+                      <div className="legend-item">
+                        <span className="legend-color" style={{ backgroundColor: '#10b981' }}></span>
+                        Low
+                      </div>
+                    </div>
+
+                    <div className="visualization-buttons">
+                      <a
+                        href="/visualization/index.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-visualization"
+                      >
+                        View 3D Visualization
+                        <ExternalLink size={16} />
+                      </a>
+                    </div>
+                  </section>
+
+                  {/* Segment Assessment Table */}
+                  <section className="section">
+                    <div className="section-header">
+                      <Settings size={20} />
+                      <h2>Segment-wise Assessment</h2>
+                    </div>
+                    <div className="table-container">
+                      <table className="assessment-table">
+                        <thead>
+                          <tr>
+                            <th>Segment ID</th>
+                            <th>Fault</th>
+                            <th>Confidence</th>
+                            <th>Priority Level</th>
+                            <th>Action</th>
+                            <th>Diversion</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {assessmentData.segments.map((seg) => (
+                            <tr key={seg.segment_id}>
+                              <td>
+                                <span className="segment-id-badge">{seg.segment_id}</span>
+                              </td>
+                              <td>
+                                <span className="fault-badge">{seg.fault.replace(/_/g, ' ')}</span>
+                              </td>
+                              <td>
+                                <div className="confidence-bar">
+                                  <div
+                                    className="confidence-fill"
+                                    style={{ width: `${seg.confidence * 100}%` }}
+                                  ></div>
+                                  <span className="confidence-text">{formatConfidence(seg.confidence)}</span>
+                                </div>
+                              </td>
+                              <td>
+                                <span
+                                  className={`priority-badge priority-${seg.priority}`}
+                                  style={{ backgroundColor: getPriorityColor(seg.priority) }}
+                                >
+                                  {getPriorityLabel(seg.priority)}
+                                </span>
+                              </td>
+                              <td className="action-cell">{seg.action}</td>
+                              <td>
+                                {seg.diversion_plan && (
+                                  <button
+                                    className="btn-icon"
+                                    title="View Diversion Plan"
+                                    onClick={() => setSelectedDiversion(seg.diversion_plan!)}
+                                    style={{ color: '#f97316' }}
+                                  >
+                                    <GitMerge size={18} />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
                 </>
               )}
             </>
@@ -706,6 +723,67 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       </main>
+
+      {/* Diversion Plan Modal */}
+      {selectedDiversion && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <div className="modal-title-group">
+                <GitMerge size={24} className="text-warning" />
+                <h3>Train Diversion Plan</h3>
+              </div>
+              <button className="btn-close" onClick={() => setSelectedDiversion(null)}>
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="alert-box warning">
+                <AlertTriangle size={20} />
+                <div>
+                  <strong>Critical Issue on Segment {selectedDiversion.original_segment}</strong>
+                  <p>Traffic must be diverted to avoid the affected track.</p>
+                </div>
+              </div>
+
+              <div className="diversion-details">
+                <div className="detail-item">
+                  <span className="label">Estimated Delay</span>
+                  <span className="value text-danger">+{selectedDiversion.delay_min} min</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Extra Distance</span>
+                  <span className="value">+{selectedDiversion.total_distance_km} km</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Total Time</span>
+                  <span className="value">{selectedDiversion.estimated_time_min} min</span>
+                </div>
+              </div>
+
+              <div className="route-timeline">
+                <h4>Network Visualization</h4>
+                {selectedDiversion.graph_data ? (
+                  <NetworkMap
+                    data={selectedDiversion.graph_data}
+                    diversionPath={selectedDiversion.stations_involved}
+                  />
+                ) : (
+                  <div className="timeline-steps">
+                    {selectedDiversion.diversion_path.map((step, idx) => (
+                      <div key={idx} className="timeline-step">
+                        <div className="step-marker"></div>
+                        <div className="step-content">{step}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
