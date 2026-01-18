@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
 import os
+from pathlib import Path
 
 # Optional imports for APU model
 try:
@@ -18,7 +19,9 @@ from .services.maintenance_service import MaintenanceService
 from fastapi.middleware.cors import CORSMiddleware
 
 from dotenv import load_dotenv
-load_dotenv()
+# Load .env from backend directory
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # Initialize FastAPI app
 app = FastAPI(

@@ -111,12 +111,17 @@ class MaintenanceService:
         else:
             fault = "APU_NORMAL_OPERATION"
         
-        # Generate explanation
-        explanation = {
-            "summary": f"Metro APU assessed with RUL of {rul_hours} hours and {confidence*100:.0f}% confidence.",
-            "key_factors": "Sensor data analysis and predictive modeling",
-            "explanation": f"The APU system shows {'critical risk of failure' if severity == 3 else 'degradation patterns' if severity == 2 else 'normal operation'}. Immediate maintenance is {'strongly' if severity == 3 else 'recommended' if severity == 2 else 'not'} recommended."
+        # Generate detailed explanation using LLM
+        apu_context = {
+            "rul_hours": rul_hours,
+            "severity": severity,
+            "confidence": confidence,
+            "priority": priority,
+            "car_id": car_id,
+            "fault": fault
         }
+        
+        detailed_explanation = self.llm.generate_apu_explanation(apu_context)
         
         # Send alert if priority is high
         if priority >= 2:
@@ -133,5 +138,5 @@ class MaintenanceService:
             "confidence": confidence,
             "priority": priority,
             "rul_hours": rul_hours,
-            "explanation": explanation
+            "explanation": detailed_explanation
         }

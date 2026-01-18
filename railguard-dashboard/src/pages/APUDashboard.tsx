@@ -308,8 +308,10 @@ const APUDashboard: React.FC = () => {
       const response = await apuApi.predictAPU(request);
 
       console.log('Prediction response:', response);
+      console.log('Explanation:', response.explanation);
 
       setLastPredictionResponse(response);
+      console.log('lastPredictionResponse state set to:', response);
 
       // Update car with prediction
       const updatedCars = metroCars.map(car => {
@@ -593,6 +595,79 @@ const APUDashboard: React.FC = () => {
               </div>
             </div>
 
+            {/* AI Prediction Summary - Moved to top for visibility */}
+            {lastPredictionResponse && (
+              <div className="ai-prediction-summary">
+                <div className="section-header">
+                  <Activity size={20} />
+                  <h2>Latest AI Prediction Summary</h2>
+                </div>
+                <div className="prediction-summary-grid">
+                  <div className={`prediction-card ${lastPredictionResponse.severity.toLowerCase()}`}>
+                    <div className="prediction-icon">
+                      {lastPredictionResponse.severity === 'CRITICAL' && '🚨'}
+                      {lastPredictionResponse.severity === 'WARNING' && '⚠️'}
+                      {lastPredictionResponse.severity === 'NORMAL' && '✅'}
+                    </div>
+                    <div className="prediction-content">
+                      <div className="prediction-label">System Status</div>
+                      <div className="prediction-value">{lastPredictionResponse.severity}</div>
+                      <div className="prediction-detail">Priority: {lastPredictionResponse.priority}/3</div>
+                    </div>
+                  </div>
+
+                  <div className="prediction-card">
+                    <div className="prediction-icon">⏱️</div>
+                    <div className="prediction-content">
+                      <div className="prediction-label">RUL Hours</div>
+                      <div className="prediction-value">{lastPredictionResponse.rul_hours.toFixed(1)}h</div>
+                      <div className="prediction-detail">Remaining useful life</div>
+                    </div>
+                  </div>
+
+                  <div className="prediction-card">
+                    <div className="prediction-icon">🎯</div>
+                    <div className="prediction-content">
+                      <div className="prediction-label">Confidence</div>
+                      <div className="prediction-value">{(lastPredictionResponse.confidence * 100).toFixed(0)}%</div>
+                      <div className="prediction-detail">Model certainty</div>
+                    </div>
+                  </div>
+
+                  {lastPredictionResponse.alert_sent && (
+                    <div className="prediction-card alert">
+                      <div className="prediction-icon">📧</div>
+                      <div className="prediction-content">
+                        <div className="prediction-label">Alert Status</div>
+                        <div className="prediction-value">Email Sent</div>
+                        <div className="prediction-detail">High priority alert</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {lastPredictionResponse.explanation && (
+                  <div className="prediction-explanation">
+                    <h3>AI-Generated Analysis</h3>
+                    <div className="explanation-section">
+                      <div className="explanation-item">
+                        <div className="explanation-label">Summary</div>
+                        <div className="explanation-text">{lastPredictionResponse.explanation.summary}</div>
+                      </div>
+                      <div className="explanation-item">
+                        <div className="explanation-label">Key Factors</div>
+                        <div className="explanation-text">{lastPredictionResponse.explanation.key_factors}</div>
+                      </div>
+                      <div className="explanation-item">
+                        <div className="explanation-label">Detailed Analysis</div>
+                        <div className="explanation-text">{lastPredictionResponse.explanation.explanation}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Digital Twin Visualization */}
             <div className="digital-twin-section">
               <div className="section-header">
@@ -748,79 +823,6 @@ const APUDashboard: React.FC = () => {
                 </table>
               </div>
             </div>
-
-            {/* AI Prediction Summary */}
-            {lastPredictionResponse && (
-              <div className="ai-prediction-summary">
-                <div className="section-header">
-                  <Activity size={20} />
-                  <h2>Latest AI Prediction Summary</h2>
-                </div>
-                <div className="prediction-summary-grid">
-                  <div className={`prediction-card ${lastPredictionResponse.severity.toLowerCase()}`}>
-                    <div className="prediction-icon">
-                      {lastPredictionResponse.severity === 'CRITICAL' && '🚨'}
-                      {lastPredictionResponse.severity === 'WARNING' && '⚠️'}
-                      {lastPredictionResponse.severity === 'NORMAL' && '✅'}
-                    </div>
-                    <div className="prediction-content">
-                      <div className="prediction-label">System Status</div>
-                      <div className="prediction-value">{lastPredictionResponse.severity}</div>
-                      <div className="prediction-detail">Priority: {lastPredictionResponse.priority}/3</div>
-                    </div>
-                  </div>
-
-                  <div className="prediction-card">
-                    <div className="prediction-icon">⏱️</div>
-                    <div className="prediction-content">
-                      <div className="prediction-label">RUL Hours</div>
-                      <div className="prediction-value">{lastPredictionResponse.rul_hours.toFixed(1)}h</div>
-                      <div className="prediction-detail">Remaining useful life</div>
-                    </div>
-                  </div>
-
-                  <div className="prediction-card">
-                    <div className="prediction-icon">🎯</div>
-                    <div className="prediction-content">
-                      <div className="prediction-label">Confidence</div>
-                      <div className="prediction-value">{(lastPredictionResponse.confidence * 100).toFixed(0)}%</div>
-                      <div className="prediction-detail">Model certainty</div>
-                    </div>
-                  </div>
-
-                  {lastPredictionResponse.alert_sent && (
-                    <div className="prediction-card alert">
-                      <div className="prediction-icon">📧</div>
-                      <div className="prediction-content">
-                        <div className="prediction-label">Alert Status</div>
-                        <div className="prediction-value">Email Sent</div>
-                        <div className="prediction-detail">High priority alert</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {lastPredictionResponse.explanation && (
-                  <div className="prediction-explanation">
-                    <h3>AI-Generated Analysis</h3>
-                    <div className="explanation-section">
-                      <div className="explanation-item">
-                        <div className="explanation-label">Summary</div>
-                        <div className="explanation-text">{lastPredictionResponse.explanation.summary}</div>
-                      </div>
-                      <div className="explanation-item">
-                        <div className="explanation-label">Key Factors</div>
-                        <div className="explanation-text">{lastPredictionResponse.explanation.key_factors}</div>
-                      </div>
-                      <div className="explanation-item">
-                        <div className="explanation-label">Detailed Analysis</div>
-                        <div className="explanation-text">{lastPredictionResponse.explanation.explanation}</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Predict Button */}
             <div className="predict-section">
