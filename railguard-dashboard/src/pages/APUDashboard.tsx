@@ -6,7 +6,7 @@ import {
   CheckCircle, TrendingUp, Grid, ChevronDown, ExternalLink
 } from 'lucide-react';
 import { apuApi } from '../services/api';
-import { MetroCar, APUPredictRequest, MaintenanceHistory } from '../types';
+import { MetroCar, APUPredictRequest, MaintenanceHistory, APUPredictResponse } from '../types';
 import './APUDashboard.css';
 
 const APUDashboard: React.FC = () => {
@@ -164,44 +164,8 @@ const APUDashboard: React.FC = () => {
     },
   ]);
 
-  const [maintenanceHistory] = useState<MaintenanceHistory[]>([
-    {
-      car_id: 3,
-      car_name: 'Car 3',
-      maintenance_type: 'Compressor Replacement',
-      date: 'Wed, Jan 14',
-      rul_before: 45,
-      rul_after: 480,
-      status: 'Completed'
-    },
-    {
-      car_id: 1,
-      car_name: 'Car 1',
-      maintenance_type: 'Thermal Sensor Calibration',
-      date: 'Mon, Jan 12',
-      rul_before: 120,
-      rul_after: 350,
-      status: 'Completed'
-    },
-    {
-      car_id: 5,
-      car_name: 'Car 5',
-      maintenance_type: 'Pressure Valve Inspection',
-      date: 'Thu, Jan 15',
-      rul_before: 180,
-      rul_after: 180,
-      status: 'In Progress'
-    },
-    {
-      car_id: 2,
-      car_name: 'Car 2',
-      maintenance_type: 'Air Dryer Maintenance',
-      date: 'Fri, Jan 16',
-      rul_before: 220,
-      rul_after: 220,
-      status: 'Scheduled'
-    },
-  ]);
+  const [maintenanceHistory, setMaintenanceHistory] = useState<MaintenanceHistory[]>([]);
+  const [lastPredictionResponse, setLastPredictionResponse] = useState<APUPredictResponse | null>(null);
 
   const selectedCarData = metroCars.find(car => car.id === selectedCar) || metroCars[0];
 
@@ -310,6 +274,9 @@ const APUDashboard: React.FC = () => {
     try {
       console.log('Starting prediction for car:', selectedCar);
       
+      // Store RUL before prediction
+      const rulBefore = selectedCarData.rul;
+      
       // Generate 180 timesteps of sensor data
       const sensorWindow: number[][] = [];
       const sensorValues = Object.values(selectedCarData.sensors);
@@ -341,6 +308,10 @@ const APUDashboard: React.FC = () => {
       const response = await apuApi.predictAPU(request);
 
       console.log('Prediction response:', response);
+      console.log('Explanation:', response.explanation);
+
+      setLastPredictionResponse(response);
+      console.log('lastPredictionResponse state set to:', response);
 
       // Update car with prediction
       const updatedCars = metroCars.map(car => {
@@ -358,6 +329,26 @@ const APUDashboard: React.FC = () => {
 
       setMetroCars(updatedCars);
       setLastInference(new Date().toLocaleTimeString());
+      
+      // Add to maintenance history
+      const newHistoryEntry: MaintenanceHistory = {
+        car_id: selectedCar,
+        car_name: selectedCarData.name,
+        maintenance_type: 'RUL Prediction Analysis',
+        date: new Date().toLocaleDateString('en-US', { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        rul_before: Math.round(rulBefore * 10) / 10,
+        rul_after: Math.round(response.rul_hours * 10) / 10,
+        status: 'Completed'
+      };
+      
+      setMaintenanceHistory([newHistoryEntry, ...maintenanceHistory]);
+      
       console.log('Prediction successful, car updated');
     } catch (error) {
       console.error('Prediction error:', error);
@@ -604,6 +595,79 @@ const APUDashboard: React.FC = () => {
               </div>
             </div>
 
+            {/* AI Prediction Summary - Moved to top for visibility */}
+            {lastPredictionResponse && (
+              <div className="ai-prediction-summary">
+                <div className="section-header">
+                  <Activity size={20} />
+                  <h2>Latest AI Prediction Summary</h2>
+                </div>
+                <div className="prediction-summary-grid">
+                  <div className={`prediction-card ${lastPredictionResponse.severity.toLowerCase()}`}>
+                    <div className="prediction-icon">
+                      {lastPredictionResponse.severity === 'CRITICAL' && '🚨'}
+                      {lastPredictionResponse.severity === 'WARNING' && '⚠️'}
+                      {lastPredictionResponse.severity === 'NORMAL' && '✅'}
+                    </div>
+                    <div className="prediction-content">
+                      <div className="prediction-label">System Status</div>
+                      <div className="prediction-value">{lastPredictionResponse.severity}</div>
+                      <div className="prediction-detail">Priority: {lastPredictionResponse.priority}/3</div>
+                    </div>
+                  </div>
+
+                  <div className="prediction-card">
+                    <div className="prediction-icon">⏱️</div>
+                    <div className="prediction-content">
+                      <div className="prediction-label">RUL Hours</div>
+                      <div className="prediction-value">{lastPredictionResponse.rul_hours.toFixed(1)}h</div>
+                      <div className="prediction-detail">Remaining useful life</div>
+                    </div>
+                  </div>
+
+                  <div className="prediction-card">
+                    <div className="prediction-icon">🎯</div>
+                    <div className="prediction-content">
+                      <div className="prediction-label">Confidence</div>
+                      <div className="prediction-value">{(lastPredictionResponse.confidence * 100).toFixed(0)}%</div>
+                      <div className="prediction-detail">Model certainty</div>
+                    </div>
+                  </div>
+
+                  {lastPredictionResponse.alert_sent && (
+                    <div className="prediction-card alert">
+                      <div className="prediction-icon">📧</div>
+                      <div className="prediction-content">
+                        <div className="prediction-label">Alert Status</div>
+                        <div className="prediction-value">Email Sent</div>
+                        <div className="prediction-detail">High priority alert</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {lastPredictionResponse.explanation && (
+                  <div className="prediction-explanation">
+                    <h3>AI-Generated Analysis</h3>
+                    <div className="explanation-section">
+                      <div className="explanation-item">
+                        <div className="explanation-label">Summary</div>
+                        <div className="explanation-text">{lastPredictionResponse.explanation.summary}</div>
+                      </div>
+                      <div className="explanation-item">
+                        <div className="explanation-label">Key Factors</div>
+                        <div className="explanation-text">{lastPredictionResponse.explanation.key_factors}</div>
+                      </div>
+                      <div className="explanation-item">
+                        <div className="explanation-label">Detailed Analysis</div>
+                        <div className="explanation-text">{lastPredictionResponse.explanation.explanation}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Digital Twin Visualization */}
             <div className="digital-twin-section">
               <div className="section-header">
@@ -636,6 +700,10 @@ const APUDashboard: React.FC = () => {
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="btn-visualization"
+                  onClick={(e) => {
+                    // Store car data in localStorage for the visualization
+                    localStorage.setItem('apuCarData', JSON.stringify(metroCars));
+                  }}
                 >
                   View 3D Visualization
                   <ExternalLink size={16} />
@@ -781,42 +849,43 @@ const APUDashboard: React.FC = () => {
 
         {activeTab === 'history' && (
           <div className="apu-content">
-            <div className="history-section">
+            <section className="section">
               <div className="section-header">
                 <Clock size={20} />
                 <h2>APU Maintenance History</h2>
               </div>
-              <div className="history-list">
-                {maintenanceHistory.map((item, index) => (
-                  <div key={index} className={`history-item ${item.status.toLowerCase().replace(' ', '-')}`}>
-                    <div className="history-icon">
-                      {item.status === 'Completed' && <CheckCircle size={24} />}
-                      {item.status === 'In Progress' && <Activity size={24} />}
-                      {item.status === 'Scheduled' && <Clock size={24} />}
-                    </div>
-                    <div className="history-content">
-                      <div className="history-header">
-                        <span className="history-car">{item.car_name}</span>
-                        <span className="history-dot">•</span>
-                        <span className="history-type">{item.maintenance_type}</span>
+              {maintenanceHistory.length === 0 ? (
+                <div className="empty-state">
+                  <Clock size={48} />
+                  <h3>No History Yet</h3>
+                  <p>Maintenance records will appear here after completion</p>
+                </div>
+              ) : (
+                <div className="history-list">
+                  {maintenanceHistory.map((item, idx) => (
+                    <div key={idx} className="history-item">
+                      <div className="history-item-header">
+                        <div>
+                          <h4>{item.maintenance_type}</h4>
+                          <p className="history-timestamp">{item.date}</p>
+                        </div>
+                        <div className="history-stats">
+                          <span className="stat-badge">{item.car_name}</span>
+                          <span className={`stat-badge ${item.status.toLowerCase().replace(' ', '-')}`}>
+                            {item.status}
+                          </span>
+                        </div>
                       </div>
-                      <div className="history-date">{item.date}</div>
-                    </div>
-                    <div className="history-rul">
-                      <div className="rul-change-label">RUL Change</div>
-                      <div className="rul-change-value">
-                        {item.rul_before}h → {item.rul_after}h
+                      <div className="history-summary">
+                        RUL Change: {item.rul_before}h → {item.rul_after}h
+                        {item.rul_after > item.rul_before && 
+                          ` (+${item.rul_after - item.rul_before}h improvement)`}
                       </div>
                     </div>
-                    <div className="history-status">
-                      <span className={`status-badge ${item.status.toLowerCase().replace(' ', '-')}`}>
-                        {item.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
         )}
 

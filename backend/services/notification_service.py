@@ -1,7 +1,13 @@
 import os
+from pathlib import Path
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 
 class NotificationService:

@@ -1557,6 +1557,182 @@ input:checked + .toggle-slider:before {
   }
 }
 
+/* AI Prediction Summary Section */
+.ai-prediction-summary {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.prediction-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.prediction-card {
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+}
+
+.prediction-card:hover {
+  border-color: #4b5563;
+  background: #1a202c;
+}
+
+.prediction-card.critical {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.prediction-card.warning {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.prediction-card.normal {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.prediction-card.alert {
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.prediction-icon {
+  font-size: 24px;
+  min-width: 32px;
+}
+
+.prediction-content {
+  flex: 1;
+}
+
+.prediction-label {
+  font-size: 12px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.prediction-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f9fafb;
+  margin-bottom: 4px;
+}
+
+.prediction-detail {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.prediction-explanation {
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.prediction-explanation h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f9fafb;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.explanation-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.explanation-item {
+  padding: 12px;
+  background: #0f1419;
+  border-left: 3px solid #3b82f6;
+  border-radius: 4px;
+}
+
+.explanation-label {
+  font-size: 12px;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.explanation-text {
+  font-size: 14px;
+  color: #e5e7eb;
+  line-height: 1.6;
+  font-weight: 400;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.explanation-text h2,
+.explanation-text h3,
+.explanation-text h4 {
+  color: #10b981;
+  font-weight: 700;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+.explanation-text h2 {
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+  padding-bottom: 6px;
+  font-size: 15px;
+}
+
+.explanation-text h3 {
+  font-size: 14px;
+}
+
+.explanation-text p {
+  margin: 8px 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+.explanation-text strong,
+.explanation-text b {
+  color: #6ee7b7;
+  font-weight: 700;
+}
+
+.explanation-text ol,
+.explanation-text ul {
+  margin: 10px 0 10px 20px;
+  padding: 0;
+}
+
+.explanation-text li {
+  margin: 6px 0;
+  padding-left: 4px;
+  line-height: 1.5;
+}
+
 @media (max-width: 768px) {
   .apu-dashboard {
     flex-direction: column;
@@ -1574,5 +1750,9 @@ input:checked + .toggle-slider:before {
   
   .digital-twin-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .prediction-summary-grid {
+    grid-template-columns: 1fr;
   }
 }

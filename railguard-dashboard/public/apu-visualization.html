@@ -79,16 +79,45 @@ const DEMO_STATES = [
   { severity: "NORMAL",   confidence: 0.48, mockRUL: 185.8 }
 ];
 
+/* ================= READ DATA FROM DASHBOARD ================= */
+function getCarDataFromDashboard() {
+  try {
+    const stored = localStorage.getItem('apuCarData');
+    if (stored) {
+      const data = JSON.parse(stored);
+      console.log('Loaded car data from dashboard:', data);
+      return data.slice(0, 3); // Only first 3 cars
+    }
+  } catch (e) {
+    console.error('Error reading car data:', e);
+  }
+  return null;
+}
+
 function colorFromSeverity(sev) {
   if (sev === "CRITICAL") return 0xff0000;
   if (sev === "WARNING")  return 0xffa500;
   return 0x00ff00;
 }
 
-function createAPU(center, zOffset, index, rul, trainMaxY, apiData = null) {
-  // Use API data if available, otherwise fall back to demo
-  const state = apiData || DEMO_STATES[index];
-  const color = new THREE.Color(colorFromSeverity(state.severity));
+function createAPU(center, zOffset, index, rul, trainMaxY, carData = null) {
+  // Use dashboard data if available, otherwise fall back to demo
+  let severity, confidence, displayRUL;
+  
+  if (carData) {
+    // Data from dashboard
+    severity = carData.status.toUpperCase();
+    confidence = carData.confidence / 100; // Convert percentage to decimal
+    displayRUL = carData.rul;
+  } else {
+    // Fallback to demo
+    const state = DEMO_STATES[index];
+    severity = state.severity;
+    confidence = state.confidence;
+    displayRUL = rul !== undefined ? rul : state.mockRUL;
+  }
+  
+  const color = new THREE.Color(colorFromSeverity(severity));
 
   /* --- SMALLER APU CABINET --- */
   const geo = new THREE.BoxGeometry(0.3, 0.15, 0.25);
@@ -117,14 +146,11 @@ function createAPU(center, zOffset, index, rul, trainMaxY, apiData = null) {
   div.className = "label";
   div.style.borderLeftColor = `#${color.getHexString()}`;
   
-  // Use actual RUL from API or fallback to mock value
-  const displayRUL = rul !== undefined ? rul : state.mockRUL;
-  
   div.innerHTML = `
 <span class="key">Car:</span> <span class="val">${index + 1}</span>
 <span class="key">RUL:</span> <span class="val">${displayRUL.toFixed(1)} h</span>
-<span class="key">Severity:</span> <span class="val">${state.severity}</span>
-<span class="key">Conf:</span> <span class="val">${(state.confidence*100).toFixed(1)}%</span>
+<span class="key">Severity:</span> <span class="val">${severity}</span>
+<span class="key">Conf:</span> <span class="val">${(confidence*100).toFixed(1)}%</span>
 `;
 
   const label = new CSS2DObject(div);
@@ -204,30 +230,48 @@ loader.load("./apu-models/train.glb", async (gltf) => {
   console.log("Train height:", height);
   console.log("Train center:", center);
 
-  /* ===== FETCH PREDICTIONS AND CREATE APUs ===== */
-  const predictions = await fetchAPUPredictions();
-  allPredictions = predictions; // Store for animation
+  /* ===== LOAD DATA FROM DASHBOARD ===== */
+  const dashboardData = getCarDataFromDashboard();
   
-  if (predictions.length === 0) {
-    console.warn("No predictions fetched, using demo data");
-    // Fallback to demo data if API fails
-    const rulValues = [45.2, 120.5, 185.8];
+  if (dashboardData && dashboardData.length >= 3) {
+    console.log('Using dashboard data for visualization');
+    // Use dashboard data
     for (let i = 0; i < 3; i++) {
       const zOffset = (-length/2) + (length/3)*(i + 0.5);
-      createAPU(center, zOffset, i, rulValues[i], bbox.max.y, null);
+      createAPU(center, zOffset, i, dashboardData[i].rul, bbox.max.y, dashboardData[i]);
     }
-    // Use demo for animation
-    allPredictions = DEMO_STATES;
+    // Store for animation
+    allPredictions = dashboardData.map(car => ({
+      severity: car.status.toUpperCase(),
+      confidence: car.confidence / 100,
+      mockRUL: car.rul
+    }));
   } else {
-    // Use actual predictions from API
-    for (let i = 0; i < predictions.length; i++) {
-      const zOffset = (-length/2) + (length/3)*(i + 0.5);
-      const apiData = {
-        severity: predictions[i].severity,
-        confidence: predictions[i].confidence,
-        mockRUL: predictions[i].rul_hours
-      };
-      createAPU(center, zOffset, i, predictions[i].rul_hours, bbox.max.y, apiData);
+    console.warn('No dashboard data found, fetching from API');
+    // Fetch from API as fallback
+    const predictions = await fetchAPUPredictions();
+    
+    if (predictions.length === 0) {
+      console.warn("No predictions fetched, using demo data");
+      // Fallback to demo data
+      const rulValues = [45.2, 120.5, 185.8];
+      for (let i = 0; i < 3; i++) {
+        const zOffset = (-length/2) + (length/3)*(i + 0.5);
+        createAPU(center, zOffset, i, rulValues[i], bbox.max.y, null);
+      }
+      allPredictions = DEMO_STATES;
+    } else {
+      // Use API predictions
+      for (let i = 0; i < predictions.length; i++) {
+        const zOffset = (-length/2) + (length/3)*(i + 0.5);
+        const carData = {
+          rul: predictions[i].rul_hours,
+          status: predictions[i].severity,
+          confidence: predictions[i].confidence * 100
+        };
+        createAPU(center, zOffset, i, predictions[i].rul_hours, bbox.max.y, carData);
+      }
+      allPredictions = predictions;
     }
   }
 });

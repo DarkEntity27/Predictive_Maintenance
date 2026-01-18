@@ -67,6 +67,12 @@ export interface APUPredictResponse {
   confidence: number;
   location: APULocation;
   action: string;
+  explanation?: {
+    summary: string;
+    key_factors: string;
+    explanation: string;
+  };
+  alert_sent?: boolean;
 }
 
 export interface APUSensorData {
