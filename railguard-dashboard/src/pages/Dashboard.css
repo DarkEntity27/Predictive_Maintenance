@@ -439,30 +439,93 @@
 
 /* AI Summary */
 .ai-summary-section {
-  background: linear-gradient(135deg, rgba(110, 231, 183, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
-  border: 1px solid rgba(110, 231, 183, 0.2);
+  background: linear-gradient(135deg, rgba(110, 231, 183, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%);
+  border: 1.5px solid rgba(110, 231, 183, 0.3);
   border-radius: 0.75rem;
-  padding: 1.5rem;
+  padding: 2rem;
+  margin-top: 1rem;
 }
 
 .ai-summary-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  color: #6ee7b7;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  color: #10b981;
 }
 
 .ai-summary-header h3 {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.125rem;
+  font-weight: 700;
   margin: 0;
+  letter-spacing: 0.5px;
 }
 
 .ai-summary-content {
-  color: #cbd5e1;
+  color: #e2e8f0;
+  line-height: 1.8;
+  font-size: 0.975rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-weight: 400;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.ai-summary-content h2,
+.ai-summary-content h3,
+.ai-summary-content h4 {
+  color: #6ee7b7;
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+}
+
+.ai-summary-content h2 {
+  border-bottom: 1px solid rgba(110, 231, 183, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+.ai-summary-content p {
+  margin: 0.75rem 0;
+  padding: 0;
+  line-height: 1.8;
+}
+
+.ai-summary-content strong,
+.ai-summary-content b {
+  color: #6ee7b7;
+  font-weight: 700;
+}
+
+.ai-summary-content ol,
+.ai-summary-content ul {
+  margin: 1rem 0 1rem 1.5rem;
+  padding: 0;
+}
+
+.ai-summary-content li {
+  margin: 0.5rem 0;
+  padding-left: 0.5rem;
   line-height: 1.6;
-  font-size: 0.938rem;
+}
+
+.ai-summary-content blockquote {
+  border-left: 3px solid #3b82f6;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+.ai-summary-content code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  color: #fbbf24;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.85rem;
 }
 
 /* Track Visualization */
