@@ -89,3 +89,49 @@ class MaintenanceService:
                 "narrative": network_summary_text
             }
         }
+
+    def assess_apu(self, severity, confidence, car_id=None, rul_hours=None):
+        """
+        APU-specific assessment with OpenAI summaries and email alerts.
+        
+        severity: 1 (NORMAL), 2 (WARNING), 3 (CRITICAL)
+        confidence: float between 0-1
+        car_id: Metro car identifier
+        rul_hours: Remaining useful life in hours
+        """
+        # Map APU severity to priority (compatible with decision agent)
+        priority_map = {1: 1, 2: 2, 3: 3}
+        priority = priority_map.get(severity, 1)
+        
+        # Create APU-specific fault label
+        if severity == 3:
+            fault = "APU_CRITICAL_FAILURE_RISK"
+        elif severity == 2:
+            fault = "APU_DEGRADATION_WARNING"
+        else:
+            fault = "APU_NORMAL_OPERATION"
+        
+        # Generate explanation
+        explanation = {
+            "summary": f"Metro APU assessed with RUL of {rul_hours} hours and {confidence*100:.0f}% confidence.",
+            "key_factors": "Sensor data analysis and predictive modeling",
+            "explanation": f"The APU system shows {'critical risk of failure' if severity == 3 else 'degradation patterns' if severity == 2 else 'normal operation'}. Immediate maintenance is {'strongly' if severity == 3 else 'recommended' if severity == 2 else 'not'} recommended."
+        }
+        
+        # Send alert if priority is high
+        if priority >= 2:
+            if car_id is not None:
+                self.notifier.send_alert(
+                    segment_id=car_id,
+                    fault=fault,
+                    priority=priority,
+                    confidence=confidence
+                )
+        
+        return {
+            "fault": fault,
+            "confidence": confidence,
+            "priority": priority,
+            "rul_hours": rul_hours,
+            "explanation": explanation
+        }

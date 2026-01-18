@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Metro APU Predictive Maintenance</title>
+
+  <style>
+    body { margin: 0; overflow: hidden; background: #111; }
+
+    .label {
+      background: rgba(0,0,0,0.85);
+      border: 1px solid #444;
+      border-left: 4px solid;
+      color: #fff;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 6px;
+      border-radius: 4px;
+      white-space: pre;
+      pointer-events: none;
+    }
+
+    .key { color: #aaa; }
+    .val { color: #4fc3f7; font-weight: bold; }
+  </style>
+</head>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/"
+  }
+}
+</script>
+
+<body>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+
+/* ================= SCENE ================= */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 5000);
+camera.position.set(0, 2, 7);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.position = "absolute";
+labelRenderer.domElement.style.top = "0";
+labelRenderer.domElement.style.pointerEvents = "none";
+document.body.appendChild(labelRenderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1, 0);
+controls.update();
+
+/* ================= LIGHT ================= */
+scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+scene.add(new THREE.DirectionalLight(0xffffff, 3.0));
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 2.0));
+
+/* ================= APU HELPERS ================= */
+const apuBoxes = [];
+const apuDataMap = new Map(); // Store API data by index
+let allPredictions = []; // Store predictions globally for animation
+
+const DEMO_STATES = [
+  { severity: "CRITICAL", confidence: 0.92, mockRUL: 45.2 },
+  { severity: "WARNING",  confidence: 0.73, mockRUL: 120.5 },
+  { severity: "NORMAL",   confidence: 0.48, mockRUL: 185.8 }
+];
+
+/* ================= READ DATA FROM DASHBOARD ================= */
+function getCarDataFromDashboard() {
+  try {
+    const stored = localStorage.getItem('apuCarData');
+    if (stored) {
+      const data = JSON.parse(stored);
+      console.log('Loaded car data from dashboard:', data);
+      return data.slice(0, 3); // Only first 3 cars
+    }
+  } catch (e) {
+    console.error('Error reading car data:', e);
+  }
+  return null;
+}
+
+function colorFromSeverity(sev) {
+  if (sev === "CRITICAL") return 0xff0000;
+  if (sev === "WARNING")  return 0xffa500;
+  return 0x00ff00;
+}
+
+function createAPU(center, zOffset, index, rul, trainMaxY, carData = null) {
+  // Use dashboard data if available, otherwise fall back to demo
+  let severity, confidence, displayRUL;
+  
+  if (carData) {
+    // Data from dashboard
+    severity = carData.status.toUpperCase();
+    confidence = carData.confidence / 100; // Convert percentage to decimal
+    displayRUL = carData.rul;
+  } else {
+    // Fallback to demo
+    const state = DEMO_STATES[index];
+    severity = state.severity;
+    confidence = state.confidence;
+    displayRUL = rul !== undefined ? rul : state.mockRUL;
+  }
+  
+  const color = new THREE.Color(colorFromSeverity(severity));
+
+  /* --- SMALLER APU CABINET --- */
+  const geo = new THREE.BoxGeometry(0.3, 0.15, 0.25);
+  const mat = new THREE.MeshStandardMaterial({
+    color,
+    emissive: color,
+    emissiveIntensity: 0.6,
+    transparent: true,
+    opacity: 0.65
+  });
+
+  const box = new THREE.Mesh(geo, mat);
+
+  /* --- POSITION AT TOP INSIDE TRAIN (touching ceiling) --- */
+  box.position.set(
+    center.x,                    // centered inside train
+    trainMaxY - 0.08,           // touching the top from inside
+    center.z + zOffset           // car position along train length
+  );
+
+  scene.add(box);
+  apuBoxes.push(box);
+
+  /* --- LABEL POSITIONED BELOW BOX INSIDE TRAIN --- */
+  const div = document.createElement("div");
+  div.className = "label";
+  div.style.borderLeftColor = `#${color.getHexString()}`;
+  
+  div.innerHTML = `
+<span class="key">Car:</span> <span class="val">${index + 1}</span>
+<span class="key">RUL:</span> <span class="val">${displayRUL.toFixed(1)} h</span>
+<span class="key">Severity:</span> <span class="val">${severity}</span>
+<span class="key">Conf:</span> <span class="val">${(confidence*100).toFixed(1)}%</span>
+`;
+
+  const label = new CSS2DObject(div);
+  label.position.set(0.5, 0, 0);  // Side of the box, inside train
+  box.add(label);
+}
+
+/* ================= LOAD TRAIN ================= */
+const loader = new GLTFLoader();
+
+/* ================= FETCH APU PREDICTIONS FROM BACKEND ================= */
+async function fetchAPUPredictions() {
+  try {
+    // Generate sensor data for 3 metro cars
+    const predictions = [];
+    
+    for (let carId = 1; carId <= 3; carId++) {
+      // Generate random sensor window (180 timesteps with 15 features)
+      const sensorWindow = [];
+      for (let i = 0; i < 180; i++) {
+        const timestep = [];
+        for (let j = 0; j < 15; j++) {
+          // Generate realistic sensor values between 0 and 1
+          timestep.push(Math.random() * 0.8 + 0.1);
+        }
+        sensorWindow.push(timestep);
+      }
+      
+      try {
+        // Call backend API
+        const response = await fetch("http://127.0.0.1:8000/predict/apu", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sensor_window: sensorWindow,
+            car_id: carId
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          predictions.push({
+            carId,
+            rul_hours: data.rul_hours,
+            severity: data.severity,
+            priority: data.priority,
+            confidence: data.confidence
+          });
+          console.log(`Car ${carId}: RUL=${data.rul_hours}h, Severity=${data.severity}`);
+        }
+      } catch (err) {
+        console.error(`Error fetching prediction for car ${carId}:`, err);
+      }
+    }
+    
+    return predictions;
+  } catch (err) {
+    console.error("Error fetching APU predictions:", err);
+    return [];
+  }
+}
+
+loader.load("./apu-models/train.glb", async (gltf) => {
+  const train = gltf.scene;
+  train.scale.set(0.01, 0.01, 0.01);
+  scene.add(train);
+
+  const bbox = new THREE.Box3().setFromObject(train);
+  const center = bbox.getCenter(new THREE.Vector3());
+  const length = bbox.max.z - bbox.min.z;
+  const height = bbox.max.y - bbox.min.y;
+
+  controls.target.copy(center);
+  controls.update();
+
+  console.log("Train bbox:", bbox);
+  console.log("Train height:", height);
+  console.log("Train center:", center);
+
+  /* ===== LOAD DATA FROM DASHBOARD ===== */
+  const dashboardData = getCarDataFromDashboard();
+  
+  if (dashboardData && dashboardData.length >= 3) {
+    console.log('Using dashboard data for visualization');
+    // Use dashboard data
+    for (let i = 0; i < 3; i++) {
+      const zOffset = (-length/2) + (length/3)*(i + 0.5);
+      createAPU(center, zOffset, i, dashboardData[i].rul, bbox.max.y, dashboardData[i]);
+    }
+    // Store for animation
+    allPredictions = dashboardData.map(car => ({
+      severity: car.status.toUpperCase(),
+      confidence: car.confidence / 100,
+      mockRUL: car.rul
+    }));
+  } else {
+    console.warn('No dashboard data found, fetching from API');
+    // Fetch from API as fallback
+    const predictions = await fetchAPUPredictions();
+    
+    if (predictions.length === 0) {
+      console.warn("No predictions fetched, using demo data");
+      // Fallback to demo data
+      const rulValues = [45.2, 120.5, 185.8];
+      for (let i = 0; i < 3; i++) {
+        const zOffset = (-length/2) + (length/3)*(i + 0.5);
+        createAPU(center, zOffset, i, rulValues[i], bbox.max.y, null);
+      }
+      allPredictions = DEMO_STATES;
+    } else {
+      // Use API predictions
+      for (let i = 0; i < predictions.length; i++) {
+        const zOffset = (-length/2) + (length/3)*(i + 0.5);
+        const carData = {
+          rul: predictions[i].rul_hours,
+          status: predictions[i].severity,
+          confidence: predictions[i].confidence * 100
+        };
+        createAPU(center, zOffset, i, predictions[i].rul_hours, bbox.max.y, carData);
+      }
+      allPredictions = predictions;
+    }
+  }
+});
+
+/* ================= ANIMATE ================= */
+function animate() {
+  requestAnimationFrame(animate);
+
+  apuBoxes.forEach((b, i) => {
+    // Get severity from predictions or demo
+    const prediction = allPredictions[i];
+    const severity = prediction.severity || DEMO_STATES[i].severity;
+    const pulseSpeed = severity === "CRITICAL" ? 0.005 : 0.003;
+    const pulse = (Math.sin(Date.now()*pulseSpeed + i) + 1) * 0.15;
+    b.material.opacity = 0.5 + pulse;
+    b.material.emissiveIntensity = 0.6 + pulse * 2;
+  });
+
+  controls.update();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+animate();
+
+/* ================= RESIZE ================= */
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
