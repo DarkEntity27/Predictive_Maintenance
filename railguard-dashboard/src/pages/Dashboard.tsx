@@ -21,6 +21,8 @@ import { maintenanceApi } from '../services/api';
 import { SegmentInput, NetworkAssessmentResponse, DiversionPlan } from '../types';
 import { getPriorityLabel, formatConfidence, getPriorityColor } from '../utils/helpers';
 import NetworkMap from '../components/NetworkMap';
+import CaseStudyNarrative from '../components/CaseStudyNarrative';
+import '../components/CaseStudyNarrative.css';
 import './Dashboard.css';
 
 interface SegmentState {
@@ -51,6 +53,10 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'reports' | 'settings'>('overview');
   const [assessmentHistory, setAssessmentHistory] = useState<Array<{ timestamp: string; data: NetworkAssessmentResponse }>>([]);
   const [selectedDiversion, setSelectedDiversion] = useState<DiversionPlan | null>(null);
+
+  // Mumbai Case Study State
+  const [mumbaiCaseStudy, setMumbaiCaseStudy] = useState<any>(null);
+  const [showCaseStudy, setShowCaseStudy] = useState(false);
 
   const updateSegment = (index: number, field: keyof SegmentState, value: number) => {
     const newSegments = [...segments];
@@ -109,6 +115,31 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMumbaiCaseStudy = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/case-study/mumbai');
+      if (!response.ok) {
+        throw new Error('Failed to load Mumbai case study');
+      }
+      const data = await response.json();
+      setMumbaiCaseStudy(data);
+      setShowCaseStudy(true);
+      setActiveTab('overview');
+    } catch (err: any) {
+      setError(err.message || 'Failed to load Mumbai case study');
+      console.error('Case study error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeCaseStudy = () => {
+    setShowCaseStudy(false);
+    setMumbaiCaseStudy(null);
   };
 
   return (
@@ -320,12 +351,112 @@ const Dashboard: React.FC = () => {
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <>
-              {!assessmentData && !error && (
+              {!assessmentData && !error && !showCaseStudy && (
                 <div className="empty-state">
                   <Activity size={48} />
                   <h3>Ready to Analyze</h3>
                   <p>Configure track segments in the sidebar and click "Run Assessment" to begin</p>
+                  <div style={{ marginTop: '30px' }}>
+                    <button
+                      onClick={handleMumbaiCaseStudy}
+                      className="btn-case-study"
+                      disabled={loading}
+                      style={{
+                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                        color: 'white',
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        margin: '0 auto',
+                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                        transition: 'all 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!loading) e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <AlertTriangle size={20} />
+                      {loading ? 'Loading...' : 'View Mumbai Rail Fracture Case Study (Nov 18, 2025)'}
+                    </button>
+                  </div>
                 </div>
+              )}
+
+              {/* Mumbai Case Study Display */}
+              {showCaseStudy && mumbaiCaseStudy && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h2 style={{ color: '#f1f5f9', fontSize: '1.5rem', margin: 0 }}>
+                      <AlertTriangle size={24} style={{ display: 'inline', marginRight: '10px', color: '#ef4444' }} />
+                      Mumbai Local Rail Fracture Case Study
+                    </h2>
+                    <button
+                      onClick={closeCaseStudy}
+                      style={{
+                        background: 'rgba(148, 163, 184, 0.1)',
+                        color: '#94a3b8',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(148, 163, 184, 0.2)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <X size={16} />
+                      Close Case Study
+                    </button>
+                  </div>
+
+                  {/* Case Study Narrative */}
+                  <CaseStudyNarrative data={mumbaiCaseStudy} />
+
+                  {/* Network Visualization */}
+                  <section className="section" style={{ marginTop: '30px' }}>
+                    <div className="section-header">
+                      <GitMerge size={20} />
+                      <h2>Mumbai Central Line Network Visualization</h2>
+                    </div>
+                    <div style={{ background: '#1e293b', padding: '20px', borderRadius: '8px' }}>
+                      <div className="network-stats" style={{ display: 'flex', gap: '30px', marginBottom: '20px', borderBottom: '1px solid rgba(148, 163, 184, 0.1)', paddingBottom: '15px' }}>
+                        <div className="stat-item">
+                          <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Incident Location</span>
+                          <div className="value" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                            {mumbaiCaseStudy.location}
+                          </div>
+                        </div>
+                        <div className="stat-item">
+                          <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Incident Time</span>
+                          <div className="value" style={{ color: '#e2e8f0', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                            {mumbaiCaseStudy.incident_date} at {mumbaiCaseStudy.incident_time}
+                          </div>
+                        </div>
+                        <div className="stat-item">
+                          <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Delay</span>
+                          <div className="value" style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                            {mumbaiCaseStudy.actual_delay_min} min
+                          </div>
+                        </div>
+                      </div>
+
+                      <NetworkMap
+                        data={mumbaiCaseStudy}
+                        diversionPath={mumbaiCaseStudy.emergency_diversion}
+                        isMumbaiCaseStudy={true}
+                      />
+                    </div>
+                  </section>
+                </>
               )}
 
               {assessmentData && (
@@ -446,6 +577,11 @@ const Dashboard: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn-visualization"
+                        onClick={() => {
+                          if (assessmentData) {
+                            localStorage.setItem('trackAssessmentData', JSON.stringify(assessmentData.segments));
+                          }
+                        }}
                       >
                         View 3D Visualization
                         <ExternalLink size={16} />

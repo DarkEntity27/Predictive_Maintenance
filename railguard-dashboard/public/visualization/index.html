@@ -125,31 +125,49 @@
 
   const activeOverlays = [];
     async function loadData() {
-    const response = await fetch("http://127.0.0.1:8000/assess/network", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        segments: [
-          { segment_id: 1, features: [0.32, 1.8, 28.5, 1.01, 420] },
-          { segment_id: 2, features: [0.48, 3.9, 52.2, 0.97, 610] },
-          { segment_id: 3, features: [0.71, 6.4, 78.1, 1.08, 890] }
-        ]
-      })
-    });
-
-    if (!response.ok) {
-      console.error("API Error:", await response.text());
-      return;
+    let segments = [];
+    
+    // Try to get data from localStorage first
+    try {
+      const stored = localStorage.getItem('trackAssessmentData');
+      if (stored) {
+        segments = JSON.parse(stored);
+        console.log('Loaded assessment data from dashboard:', segments);
+      }
+    } catch (e) {
+      console.error('Error reading assessment data:', e);
     }
 
-    const data = await response.json();
+    // Fallback to API if no local data
+    if (segments.length === 0) {
+      console.warn("No dashboard data found, fetching from API fallback");
+      const response = await fetch("http://127.0.0.1:8000/assess/network", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          segments: [
+            { segment_id: 1, features: [0.32, 1.8, 28.5, 1.01, 420] },
+            { segment_id: 2, features: [0.48, 3.9, 52.2, 0.97, 610] },
+            { segment_id: 3, features: [0.71, 6.4, 78.1, 1.08, 890] }
+          ]
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        segments = data.segments;
+      } else {
+        console.error("API Error:", await response.text());
+        return;
+      }
+    }
 
     const spacing = 2.5;
-    const total = data.segments.length;
+    const total = segments.length;
 
-    data.segments.forEach((seg, i) => {
+    segments.forEach((seg, i) => {
       // --- A. 3D Overlay ---
       const threeColor = getPriorityColorThree(seg.priority);
 
@@ -180,7 +198,7 @@
       const f = seg.features ?? [];
       div.innerHTML = `
   <span class="key">ID:</span> <span class="val">${seg.segment_id}</span>
-  <span class="key">Fault:</span> <span class="val">${seg.fault}</span>
+  <span class="key">Fault:</span> <span class="val">${seg.fault.replace(/_/g, ' ')}</span>
   <span class="key">Priority:</span> <span class="val">${seg.priority}</span>
   <span class="key">Conf:</span> <span class="val">${(seg.confidence * 100).toFixed(1)}%</span>
   <span class="key">Action:</span> <span class="val">${seg.action}</span>

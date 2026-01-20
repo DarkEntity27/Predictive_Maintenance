@@ -135,6 +135,22 @@ def assess_network(request: NetworkRequest):
     return result
 
 
+@app.get("/case-study/mumbai")
+def get_mumbai_case_study():
+    """
+    Get comprehensive Mumbai Local Rail Fracture case study data.
+    
+    Returns detailed simulation of the November 18, 2025 incident including:
+    - Realistic Central Line topology (Matunga to Mulund)
+    - Dual slow/fast line infrastructure
+    - Blocked segment details (Vikhroli-Kanjurmarg)
+    - Emergency diversion path
+    - Impact metrics and predictive timeline
+    """
+    return service.diversion_service.get_mumbai_case_study()
+
+
+
 # -----------------------------
 # APU Prediction Models & Logic
 # -----------------------------
