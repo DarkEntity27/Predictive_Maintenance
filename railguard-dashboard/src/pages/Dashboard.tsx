@@ -149,15 +149,28 @@ const Dashboard: React.FC = () => {
     const element = document.getElementById('assessment-report');
     if (!element) return;
 
+    // Add temporary class for light mode text
+    element.classList.add('pdf-export-mode');
+
     const opt = {
       margin: 10,
       filename: 'network-assessment-report.pdf',
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: {
+        scale: 3,
+        backgroundColor: '#ffffff',
+        useCORS: true
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      }
     };
 
-    html2pdf().set(opt as any).from(element).save();
+    html2pdf().set(opt as any).from(element).save().then(() => {
+      element.classList.remove('pdf-export-mode');
+    });
   };
 
   return (
@@ -777,7 +790,7 @@ const Dashboard: React.FC = () => {
                     <div className="report-content" id="assessment-report">
                       <div className="report-section">
                         <h4>Assessment Summary</h4>
-                        <div className="markdown-content" style={{ marginTop: '10px', fontSize: '0.95rem', lineHeight: '1.6', color: '#e2e8f0' }}>
+                        <div className="markdown-content report-markdown">
                           <ReactMarkdown>{assessmentData.network_summary.narrative}</ReactMarkdown>
                         </div>
                       </div>
@@ -834,23 +847,23 @@ const Dashboard: React.FC = () => {
                             <h4 style={{ margin: 0 }}>Master Network View</h4>
                           </div>
 
-                          <div className="network-master-view" style={{ background: '#1e293b', padding: '20px', borderRadius: '8px' }}>
-                            <div className="network-stats" style={{ display: 'flex', gap: '30px', marginBottom: '20px', borderBottom: '1px solid rgba(148, 163, 184, 0.1)', paddingBottom: '15px' }}>
+                          <div className="network-master-view">
+                            <div className="network-stats">
                               <div className="stat-item">
-                                <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Network Status</span>
-                                <div className="value" style={{ color: assessmentData.network_summary.network_path.path_found ? '#10b981' : '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                <span className="label">Network Status</span>
+                                <div className={`value ${assessmentData.network_summary.network_path.path_found ? 'operational' : 'severed'}`}>
                                   {assessmentData.network_summary.network_path.path_found ? 'OPERATIONAL' : 'SEVERED'}
                                 </div>
                               </div>
                               <div className="stat-item">
-                                <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Total Delay</span>
-                                <div className="value" style={{ color: '#e2e8f0', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                <span className="label">Total Delay</span>
+                                <div className="value text-light">
                                   {assessmentData.network_summary.network_path.delay_min} min
                                 </div>
                               </div>
                               <div className="stat-item">
-                                <span className="label" style={{ display: 'block', color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '5px' }}>Blocked Segments</span>
-                                <div className="value" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                <span className="label">Blocked Segments</span>
+                                <div className="value severed">
                                   {assessmentData.network_summary.network_path.blocked_segments.length}
                                 </div>
                               </div>
