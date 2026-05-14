@@ -17,6 +17,9 @@ import {
   GitMerge,
   X,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 import { maintenanceApi } from '../services/api';
 import { SegmentInput, NetworkAssessmentResponse, DiversionPlan } from '../types';
 import { getPriorityLabel, formatConfidence, getPriorityColor } from '../utils/helpers';
@@ -140,6 +143,21 @@ const Dashboard: React.FC = () => {
   const closeCaseStudy = () => {
     setShowCaseStudy(false);
     setMumbaiCaseStudy(null);
+  };
+
+  const handleExportPDF = () => {
+    const element = document.getElementById('assessment-report');
+    if (!element) return;
+
+    const opt = {
+      margin: 10,
+      filename: 'network-assessment-report.pdf',
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt as any).from(element).save();
   };
 
   return (
@@ -530,7 +548,7 @@ const Dashboard: React.FC = () => {
                         <h3>AI-Generated Summary</h3>
                       </div>
                       <div className="ai-summary-content">
-                        {assessmentData.network_summary.narrative}
+                        <ReactMarkdown>{assessmentData.network_summary.narrative}</ReactMarkdown>
                       </div>
                     </div>
                   </section>
@@ -751,15 +769,17 @@ const Dashboard: React.FC = () => {
                   <div className="report-card">
                     <div className="report-header">
                       <h3>Network Assessment Report</h3>
-                      <button className="btn-download">
+                      <button className="btn-download" onClick={handleExportPDF}>
                         <Download size={18} />
-                        Export as JSON
+                        Export as PDF
                       </button>
                     </div>
-                    <div className="report-content">
+                    <div className="report-content" id="assessment-report">
                       <div className="report-section">
                         <h4>Assessment Summary</h4>
-                        <p>{assessmentData.network_summary.narrative}</p>
+                        <div className="markdown-content" style={{ marginTop: '10px', fontSize: '0.95rem', lineHeight: '1.6', color: '#e2e8f0' }}>
+                          <ReactMarkdown>{assessmentData.network_summary.narrative}</ReactMarkdown>
+                        </div>
                       </div>
                       <div className="report-section">
                         <h4>Key Metrics</h4>
