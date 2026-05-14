@@ -16,13 +16,18 @@ import {
   Download,
   GitMerge,
   X,
+  MapPin,
+  RotateCcw,
+  RefreshCw,
 } from 'lucide-react';
 import { maintenanceApi } from '../services/api';
 import { SegmentInput, NetworkAssessmentResponse, DiversionPlan } from '../types';
 import { getPriorityLabel, formatConfidence, getPriorityColor } from '../utils/helpers';
 import NetworkMap from '../components/NetworkMap';
 import CaseStudyNarrative from '../components/CaseStudyNarrative';
+import BengaluruNetworkMap from '../components/BengaluruNetworkMap';
 import '../components/CaseStudyNarrative.css';
+import '../components/BengaluruCaseStudy.css';
 import './Dashboard.css';
 
 interface SegmentState {
@@ -57,6 +62,15 @@ const Dashboard: React.FC = () => {
   // Mumbai Case Study State
   const [mumbaiCaseStudy, setMumbaiCaseStudy] = useState<any>(null);
   const [showCaseStudy, setShowCaseStudy] = useState(false);
+
+  // Bengaluru Case Study State
+  const [blrData, setBlrData] = useState<any>(null);
+  const [showBlrCaseStudy, setShowBlrCaseStudy] = useState(false);
+  const [blrBlockedSegments, setBlrBlockedSegments] = useState<number[]>([]);
+  const [blrSegmentOverrides, setBlrSegmentOverrides] = useState<Record<string, any>>({});
+  const [blrRerouteResult, setBlrRerouteResult] = useState<any>(null);
+  const [blrSelectedSegment, setBlrSelectedSegment] = useState<number | null>(null);
+  const [blrLoading, setBlrLoading] = useState(false);
 
   const updateSegment = (index: number, field: keyof SegmentState, value: number) => {
     const newSegments = [...segments];
@@ -140,6 +154,84 @@ const Dashboard: React.FC = () => {
   const closeCaseStudy = () => {
     setShowCaseStudy(false);
     setMumbaiCaseStudy(null);
+  };
+
+  // --- Bengaluru Handlers ---
+  const handleBlrCaseStudy = async () => {
+    setBlrLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/case-study/bengaluru');
+      if (!response.ok) throw new Error('Failed to load Bengaluru case study');
+      const data = await response.json();
+      setBlrData(data);
+      setShowBlrCaseStudy(true);
+      setBlrBlockedSegments([]);
+      setBlrRerouteResult(null);
+      setBlrSelectedSegment(null);
+      setBlrSegmentOverrides({});
+      setActiveTab('overview');
+    } catch (err: any) {
+      setError(err.message || 'Failed to load Bengaluru case study');
+    } finally {
+      setBlrLoading(false);
+    }
+  };
+
+  const closeBlrCaseStudy = () => {
+    setShowBlrCaseStudy(false);
+    setBlrData(null);
+    setBlrRerouteResult(null);
+    setBlrBlockedSegments([]);
+    setBlrSelectedSegment(null);
+    setBlrSegmentOverrides({});
+  };
+
+  const toggleBlrSegmentBlocked = (segmentId: number) => {
+    setBlrBlockedSegments((prev) =>
+      prev.includes(segmentId) ? prev.filter((id) => id !== segmentId) : [...prev, segmentId]
+    );
+  };
+
+  const updateBlrSegmentParam = (segmentId: number, param: string, value: number) => {
+    setBlrSegmentOverrides((prev) => ({
+      ...prev,
+      [String(segmentId)]: { ...prev[String(segmentId)], [param]: value },
+    }));
+  };
+
+  const handleBlrReroute = async () => {
+    setBlrLoading(true);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/case-study/bengaluru/reroute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blocked_segments: blrBlockedSegments,
+          segment_overrides: blrSegmentOverrides,
+        }),
+      });
+      if (!response.ok) throw new Error('Reroute failed');
+      const data = await response.json();
+      setBlrRerouteResult(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to reroute');
+    } finally {
+      setBlrLoading(false);
+    }
+  };
+
+  const resetBlrState = () => {
+    setBlrBlockedSegments([]);
+    setBlrRerouteResult(null);
+    setBlrSelectedSegment(null);
+    setBlrSegmentOverrides({});
+  };
+
+  // Get selected segment edge data
+  const getBlrSelectedEdge = () => {
+    if (!blrData || blrSelectedSegment === null) return null;
+    return blrData.edges.find((e: any) => e.segment_id === blrSelectedSegment);
   };
 
   return (
@@ -351,12 +443,12 @@ const Dashboard: React.FC = () => {
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <>
-              {!assessmentData && !error && !showCaseStudy && (
+              {!assessmentData && !error && !showCaseStudy && !showBlrCaseStudy && (
                 <div className="empty-state">
                   <Activity size={48} />
                   <h3>Ready to Analyze</h3>
                   <p>Configure track segments in the sidebar and click "Run Assessment" to begin</p>
-                  <div style={{ marginTop: '30px' }}>
+                  <div style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'center' }}>
                     <button
                       onClick={handleMumbaiCaseStudy}
                       className="btn-case-study"
@@ -373,7 +465,6 @@ const Dashboard: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '10px',
-                        margin: '0 auto',
                         boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
                         transition: 'all 0.3s ease',
                       }}
@@ -386,6 +477,35 @@ const Dashboard: React.FC = () => {
                     >
                       <AlertTriangle size={20} />
                       {loading ? 'Loading...' : 'View Mumbai Rail Fracture Case Study (Nov 18, 2025)'}
+                    </button>
+                    <button
+                      onClick={handleBlrCaseStudy}
+                      className="btn-case-study"
+                      disabled={blrLoading}
+                      style={{
+                        background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                        color: 'white',
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        cursor: blrLoading ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)',
+                        transition: 'all 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!blrLoading) e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <MapPin size={20} />
+                      {blrLoading ? 'Loading...' : 'Bengaluru Suburban Rail — Interactive Rerouting'}
                     </button>
                   </div>
                 </div>
@@ -457,6 +577,212 @@ const Dashboard: React.FC = () => {
                     </div>
                   </section>
                 </>
+              )}
+
+              {/* Bengaluru Case Study Display */}
+              {showBlrCaseStudy && blrData && (
+                <div className="blr-case-study">
+                  <div className="blr-header">
+                    <h2>
+                      <MapPin size={24} style={{ color: '#22c55e' }} />
+                      Bengaluru Suburban Rail Network
+                      <span className="city-badge">Interactive</span>
+                    </h2>
+                    <button className="blr-close-btn" onClick={closeBlrCaseStudy}>
+                      <X size={16} /> Close
+                    </button>
+                  </div>
+
+                  {/* Stats Bar */}
+                  <div className="blr-stats-bar">
+                    <div className="blr-stat-card" style={{ '--stat-color': '#3b82f6' } as any}>
+                      <span className="stat-label">Total Stations</span>
+                      <div className="stat-value">{blrData.total_stations}</div>
+                    </div>
+                    <div className="blr-stat-card" style={{ '--stat-color': '#22c55e' } as any}>
+                      <span className="stat-label">Total Segments</span>
+                      <div className="stat-value">{blrData.total_segments}</div>
+                    </div>
+                    <div className="blr-stat-card" style={{ '--stat-color': '#ef4444' } as any}>
+                      <span className="stat-label">Blocked</span>
+                      <div className={`stat-value ${blrBlockedSegments.length > 0 ? 'severed' : 'operational'}`}>
+                        {blrBlockedSegments.length}
+                      </div>
+                    </div>
+                    <div className="blr-stat-card" style={{ '--stat-color': blrRerouteResult?.network_status?.severed > 0 ? '#ef4444' : '#22c55e' } as any}>
+                      <span className="stat-label">Network Status</span>
+                      <div className={`stat-value ${
+                        !blrRerouteResult ? '' :
+                        blrRerouteResult.network_status.severed === 0 ? 'operational' :
+                        blrRerouteResult.network_status.operational > 0 ? 'warning' : 'severed'
+                      }`}>
+                        {blrRerouteResult ? blrRerouteResult.network_status.status : 'READY'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Segment Controls */}
+                  <div className="blr-controls-panel">
+                    <h3><Settings size={18} /> Segment Controls</h3>
+                    <p className="controls-subtitle">Click a segment to toggle blocked state. Select a segment to edit its parameters.</p>
+
+                    {blrBlockedSegments.length > 0 && (
+                      <div className="blr-blocked-counter">
+                        <AlertTriangle size={16} />
+                        <span>{blrBlockedSegments.length} segment(s) blocked</span>
+                        <span className="counter-badge">{blrBlockedSegments.join(', ')}</span>
+                      </div>
+                    )}
+
+                    <div className="blr-segment-grid">
+                      {blrData.edges.map((edge: any) => {
+                        const isBlocked = blrBlockedSegments.includes(edge.segment_id);
+                        const isSelected = blrSelectedSegment === edge.segment_id;
+                        return (
+                          <div
+                            key={edge.segment_id}
+                            className={`blr-segment-chip ${isBlocked ? 'blocked' : ''} ${isSelected ? 'selected' : ''}`}
+                            onClick={() => {
+                              if (blrSelectedSegment === edge.segment_id) {
+                                toggleBlrSegmentBlocked(edge.segment_id);
+                              } else {
+                                setBlrSelectedSegment(edge.segment_id);
+                              }
+                            }}
+                            onDoubleClick={() => toggleBlrSegmentBlocked(edge.segment_id)}
+                            title={`${edge.source} → ${edge.target} | Click to select, double-click to block/unblock`}
+                          >
+                            <span className="chip-corridor-dot" style={{ background: edge.corridor_color }} />
+                            {edge.segment_id}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Segment Editor */}
+                    {(() => {
+                      const selectedEdge = getBlrSelectedEdge();
+                      if (!selectedEdge) return null;
+                      const overrides = blrSegmentOverrides[String(selectedEdge.segment_id)] || {};
+                      const wear = overrides.wear_level ?? selectedEdge.wear_level;
+                      const time = overrides.time_min ?? selectedEdge.time_min;
+                      const dist = overrides.length_km ?? selectedEdge.length_km;
+                      const vib = overrides.vibration_index ?? selectedEdge.vibration_index;
+                      const isBlk = blrBlockedSegments.includes(selectedEdge.segment_id);
+
+                      return (
+                        <div className="blr-segment-editor">
+                          <h4>
+                            <span style={{ color: selectedEdge.corridor_color }}>●</span>
+                            Segment {selectedEdge.segment_id}: {selectedEdge.source} → {selectedEdge.target}
+                            {isBlk && <span style={{ color: '#ef4444', marginLeft: 8, fontSize: '0.75rem' }}>● BLOCKED</span>}
+                          </h4>
+                          <div className="editor-row">
+                            <label>Wear Level</label>
+                            <input type="range" min="0" max="1" step="0.01" value={wear}
+                              onChange={(e) => updateBlrSegmentParam(selectedEdge.segment_id, 'wear_level', parseFloat(e.target.value))} />
+                            <span className="editor-value" style={{ color: wear > 0.7 ? '#ef4444' : wear > 0.4 ? '#f59e0b' : '#22c55e' }}>{wear.toFixed(2)}</span>
+                          </div>
+                          <div className="editor-row">
+                            <label>Travel Time (min)</label>
+                            <input type="range" min="1" max="30" step="0.5" value={time}
+                              onChange={(e) => updateBlrSegmentParam(selectedEdge.segment_id, 'time_min', parseFloat(e.target.value))} />
+                            <span className="editor-value">{time} min</span>
+                          </div>
+                          <div className="editor-row">
+                            <label>Distance (km)</label>
+                            <input type="range" min="0.5" max="15" step="0.5" value={dist}
+                              onChange={(e) => updateBlrSegmentParam(selectedEdge.segment_id, 'length_km', parseFloat(e.target.value))} />
+                            <span className="editor-value">{dist} km</span>
+                          </div>
+                          <div className="editor-row">
+                            <label>Vibration Index</label>
+                            <input type="range" min="0" max="100" step="1" value={vib}
+                              onChange={(e) => updateBlrSegmentParam(selectedEdge.segment_id, 'vibration_index', parseFloat(e.target.value))} />
+                            <span className="editor-value">{vib.toFixed(0)}</span>
+                          </div>
+                          <button
+                            onClick={() => toggleBlrSegmentBlocked(selectedEdge.segment_id)}
+                            style={{
+                              marginTop: 10, padding: '8px 18px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                              background: isBlk ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                              color: isBlk ? '#22c55e' : '#ef4444', fontWeight: 600, fontSize: '0.82rem',
+                            }}
+                          >
+                            {isBlk ? '✓ Unblock Segment' : '✕ Block Segment'}
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="blr-actions">
+                    <button className="blr-btn-reroute" onClick={handleBlrReroute} disabled={blrLoading}>
+                      <RefreshCw size={18} />
+                      {blrLoading ? 'Computing...' : 'Compute Reroute'}
+                    </button>
+                    <button className="blr-btn-reset" onClick={resetBlrState}>
+                      <RotateCcw size={18} /> Reset All
+                    </button>
+                  </div>
+
+                  {/* Corridor Results */}
+                  {blrRerouteResult && (
+                    <div className="blr-corridor-results">
+                      {blrRerouteResult.corridor_results.map((cr: any) => (
+                        <div key={cr.corridor_id} className="blr-corridor-card" style={{ '--corridor-color': cr.corridor_color } as any}>
+                          <div className="corridor-header">
+                            <span className="corridor-name">{cr.corridor_name}</span>
+                            <span className={`corridor-status ${cr.path_blocked ? 'blocked' : cr.is_rerouted ? 'rerouted' : 'found'}`}>
+                              {cr.path_blocked ? '✕ SEVERED' : cr.is_rerouted ? '⟳ REROUTED' : '✓ NORMAL'}
+                            </span>
+                          </div>
+                          <div className="corridor-route">{cr.source} → {cr.destination}</div>
+                          {cr.path_found ? (
+                            <div className="corridor-metrics">
+                              <div className="metric">
+                                <span className="m-label">Time</span>
+                                <span className="m-value">{cr.total_time_min} min</span>
+                              </div>
+                              <div className="metric">
+                                <span className="m-label">Distance</span>
+                                <span className="m-value">{cr.total_distance_km} km</span>
+                              </div>
+                              <div className="metric">
+                                <span className="m-label">Segments</span>
+                                <span className="m-value">{cr.segment_count}</span>
+                              </div>
+                              {cr.delay_min > 0 && (
+                                <div className="metric">
+                                  <span className="m-label">Delay</span>
+                                  <span className="m-value delay">+{cr.delay_min} min</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div style={{ color: '#ef4444', fontSize: '0.85rem', fontWeight: 600, marginTop: 4 }}>
+                              No path available — corridor completely blocked
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Network Map */}
+                  <div className="blr-map-section">
+                    <h3><GitMerge size={18} /> Network Visualization</h3>
+                    <BengaluruNetworkMap
+                      nodes={blrRerouteResult?.graph_data?.nodes || blrData.nodes}
+                      edges={blrRerouteResult?.graph_data?.edges || blrData.edges}
+                      blockedSegmentIds={blrBlockedSegments}
+                      rerouteData={blrRerouteResult}
+                      onSegmentClick={(id) => setBlrSelectedSegment(id)}
+                      selectedSegmentId={blrSelectedSegment}
+                    />
+                  </div>
+                </div>
               )}
 
               {assessmentData && (

@@ -538,3 +538,425 @@ class DiversionService:
             }
         }
 
+    def get_bengaluru_case_study(self):
+        """
+        Returns the Bengaluru Suburban Rail Network topology with 4 corridors.
+        All segment parameters are editable by the user on the frontend.
+        
+        Corridors:
+          1 (Red):   Kengeri ↔ Whitefield  (14 stations, 13 segments)
+          2 (Yellow): Rajanukunte ↔ Yeshwantpur (9 stations, 8 segments)
+          3 (Blue):  Nelamangala ↔ Yeshwantpur (10 stations, 9 segments)
+          4 (Green): Devanahalli ↔ Heelalige (18 stations, 17 segments)
+        Interchanges: Yeshwantpur (C2↔C3), KR Puram (C1↔C4), 
+                      Yelahanka (C2↔C4), KSR↔Yeshwantpur link (C1↔C2/C3)
+        """
+
+        # --- Station definitions per corridor ---
+        corridor_1_stations = [
+            "Kengeri", "R V College", "Jnanabharathi", "Nayandahalli",
+            "Chord Road", "Krishnadevaraya", "Jagjeevanram Nagar", "Binnypet",
+            "KSR Bengaluru City", "Cantonment", "Bengaluru East",
+            "KR Puram", "Hoodi", "Whitefield"
+        ]
+
+        corridor_2_stations = [
+            "Rajanukunte", "Honnenahalli", "Mudenahalli", "Nagenahalli",
+            "Yelahanka", "Judicial Layout", "Kodigehalli", "Hebbal",
+            "Yeshwantpur"
+        ]
+
+        corridor_3_stations = [
+            "Nelamangala", "Bethanagere", "Honnasandra", "Narasapura",
+            "Soladevanahalli", "Chikkabanavara", "Settihalli", "Jalahalli",
+            "Lottegollahalli", "Yeshwantpur"
+        ]
+
+        corridor_4_stations = [
+            "Devanahalli", "Doddajala", "Chikkajala", "Bettahalasur",
+            "Nitte Meenakshi", "Jakkur East", "Hegde Nagar", "Thanisandra",
+            "Hennur", "Horamavu", "Channasandra", "KR Puram",
+            "Baiyappanahalli", "Belandur", "Karmelaram", "Huskur",
+            "Bommasandra", "Heelalige"
+        ]
+
+        # --- Node positions for SVG rendering ---
+        # Layout: Corridor 1 runs horizontally bottom-center
+        # Corridor 2 runs vertically top-center-left
+        # Corridor 3 runs from far-left to center
+        # Corridor 4 runs vertically top-right to bottom
+        node_positions = {
+            # Corridor 1 (Red) — horizontal, y ≈ 500
+            "Kengeri": {"x": 60, "y": 620},
+            "R V College": {"x": 120, "y": 580},
+            "Jnanabharathi": {"x": 160, "y": 540},
+            "Nayandahalli": {"x": 200, "y": 500},
+            "Chord Road": {"x": 240, "y": 460},
+            "Krishnadevaraya": {"x": 270, "y": 430},
+            "Jagjeevanram Nagar": {"x": 300, "y": 400},
+            "Binnypet": {"x": 330, "y": 380},
+            "KSR Bengaluru City": {"x": 350, "y": 360},
+            "Cantonment": {"x": 420, "y": 360},
+            "Bengaluru East": {"x": 500, "y": 360},
+            "KR Puram": {"x": 600, "y": 320},
+            "Hoodi": {"x": 660, "y": 300},
+            "Whitefield": {"x": 730, "y": 280},
+
+            # Corridor 2 (Yellow) — vertical, x ≈ 350
+            "Rajanukunte": {"x": 340, "y": 30},
+            "Honnenahalli": {"x": 340, "y": 70},
+            "Mudenahalli": {"x": 350, "y": 110},
+            "Nagenahalli": {"x": 360, "y": 145},
+            "Yelahanka": {"x": 370, "y": 180},
+            "Judicial Layout": {"x": 360, "y": 215},
+            "Kodigehalli": {"x": 350, "y": 245},
+            "Hebbal": {"x": 340, "y": 275},
+            "Yeshwantpur": {"x": 270, "y": 320},
+
+            # Corridor 3 (Blue) — from far left to Yeshwantpur
+            "Nelamangala": {"x": 30, "y": 100},
+            "Bethanagere": {"x": 60, "y": 130},
+            "Honnasandra": {"x": 85, "y": 155},
+            "Narasapura": {"x": 105, "y": 180},
+            "Soladevanahalli": {"x": 130, "y": 210},
+            "Chikkabanavara": {"x": 155, "y": 240},
+            "Settihalli": {"x": 180, "y": 260},
+            "Jalahalli": {"x": 205, "y": 280},
+            "Lottegollahalli": {"x": 235, "y": 300},
+            # "Yeshwantpur" already defined
+
+            # Corridor 4 (Green) — from top-right to bottom
+            "Devanahalli": {"x": 620, "y": 30},
+            "Doddajala": {"x": 600, "y": 65},
+            "Chikkajala": {"x": 585, "y": 95},
+            "Bettahalasur": {"x": 570, "y": 125},
+            "Nitte Meenakshi": {"x": 555, "y": 155},
+            "Jakkur East": {"x": 540, "y": 185},
+            "Hegde Nagar": {"x": 560, "y": 210},
+            "Thanisandra": {"x": 575, "y": 240},
+            "Hennur": {"x": 590, "y": 265},
+            "Horamavu": {"x": 605, "y": 290},
+            "Channasandra": {"x": 610, "y": 310},
+            # "KR Puram" already defined
+            "Baiyappanahalli": {"x": 540, "y": 400},
+            "Belandur": {"x": 530, "y": 450},
+            "Karmelaram": {"x": 520, "y": 500},
+            "Huskur": {"x": 510, "y": 545},
+            "Bommasandra": {"x": 500, "y": 590},
+            "Heelalige": {"x": 490, "y": 640},
+        }
+
+        # --- Build nodes list ---
+        nodes = []
+        all_stations = set()
+        corridor_map = {}  # station -> corridor number
+
+        for station in corridor_1_stations:
+            all_stations.add(station)
+            corridor_map.setdefault(station, []).append(1)
+        for station in corridor_2_stations:
+            all_stations.add(station)
+            corridor_map.setdefault(station, []).append(2)
+        for station in corridor_3_stations:
+            all_stations.add(station)
+            corridor_map.setdefault(station, []).append(3)
+        for station in corridor_4_stations:
+            all_stations.add(station)
+            corridor_map.setdefault(station, []).append(4)
+
+        for station in all_stations:
+            corridors = corridor_map[station]
+            is_interchange = len(corridors) > 1
+            pos = node_positions.get(station, {"x": 400, "y": 400})
+            nodes.append({
+                "id": station,
+                "x": pos["x"],
+                "y": pos["y"],
+                "label": station,
+                "corridors": corridors,
+                "is_interchange": is_interchange,
+            })
+
+        # --- Build edges (segments) ---
+        edges = []
+        segment_id = 1
+
+        # Default segment parameters
+        default_params = {
+            "length_km": 3.5,
+            "time_min": 5,
+            "wear_level": 0.3,
+            "vibration_index": 25.0,
+            "alignment_deviation": 1.5,
+        }
+
+        def add_corridor_segments(stations, corridor_num, color, start_id):
+            nonlocal segment_id
+            seg_id = start_id
+            for i in range(len(stations) - 1):
+                edges.append({
+                    "segment_id": seg_id,
+                    "source": stations[i],
+                    "target": stations[i + 1],
+                    "corridor": corridor_num,
+                    "corridor_color": color,
+                    "line_type": f"corridor_{corridor_num}",
+                    "length_km": default_params["length_km"],
+                    "time_min": default_params["time_min"],
+                    "wear_level": default_params["wear_level"],
+                    "vibration_index": default_params["vibration_index"],
+                    "alignment_deviation": default_params["alignment_deviation"],
+                    "is_blocked": False,
+                })
+                seg_id += 1
+            return seg_id
+
+        next_id = add_corridor_segments(corridor_1_stations, 1, "#ef4444", 1)    # 1-13
+        next_id = add_corridor_segments(corridor_2_stations, 2, "#eab308", 101)   # 101-108
+        next_id = add_corridor_segments(corridor_3_stations, 3, "#3b82f6", 201)   # 201-209
+        next_id = add_corridor_segments(corridor_4_stations, 4, "#22c55e", 301)   # 301-317
+
+        # Interchange / crossover segments
+        interchange_segments = [
+            # Yeshwantpur is shared node for C2 & C3 — no extra edge needed
+            # KR Puram is shared node for C1 & C4 — no extra edge needed
+            # KSR Bengaluru City ↔ Yeshwantpur link (connects C1 to C2/C3)
+            {
+                "segment_id": 501,
+                "source": "KSR Bengaluru City",
+                "target": "Yeshwantpur",
+                "corridor": 0,
+                "corridor_color": "#a855f7",
+                "line_type": "crossover",
+                "length_km": 8.0,
+                "time_min": 12,
+                "wear_level": 0.25,
+                "vibration_index": 20.0,
+                "alignment_deviation": 1.0,
+                "is_blocked": False,
+            },
+            # Yelahanka ↔ Corridor 4 link (Yelahanka area connects to Jakkur East)
+            {
+                "segment_id": 502,
+                "source": "Yelahanka",
+                "target": "Jakkur East",
+                "corridor": 0,
+                "corridor_color": "#a855f7",
+                "line_type": "crossover",
+                "length_km": 5.0,
+                "time_min": 8,
+                "wear_level": 0.25,
+                "vibration_index": 20.0,
+                "alignment_deviation": 1.0,
+                "is_blocked": False,
+            },
+            # Baiyappanahalli ↔ Bengaluru East link (C4 south ↔ C1)
+            {
+                "segment_id": 503,
+                "source": "Baiyappanahalli",
+                "target": "Bengaluru East",
+                "corridor": 0,
+                "corridor_color": "#a855f7",
+                "line_type": "crossover",
+                "length_km": 3.5,
+                "time_min": 6,
+                "wear_level": 0.25,
+                "vibration_index": 20.0,
+                "alignment_deviation": 1.0,
+                "is_blocked": False,
+            },
+        ]
+        edges.extend(interchange_segments)
+
+        # --- Corridor metadata ---
+        corridors_info = [
+            {
+                "id": 1,
+                "name": "Corridor 1",
+                "color": "#ef4444",
+                "terminals": ["Kengeri", "Whitefield"],
+                "station_count": len(corridor_1_stations),
+                "segment_ids": list(range(1, 14)),
+            },
+            {
+                "id": 2,
+                "name": "Corridor 2",
+                "color": "#eab308",
+                "terminals": ["Rajanukunte", "Yeshwantpur"],
+                "station_count": len(corridor_2_stations),
+                "segment_ids": list(range(101, 109)),
+            },
+            {
+                "id": 3,
+                "name": "Corridor 3",
+                "color": "#3b82f6",
+                "terminals": ["Nelamangala", "Yeshwantpur"],
+                "station_count": len(corridor_3_stations),
+                "segment_ids": list(range(201, 210)),
+            },
+            {
+                "id": 4,
+                "name": "Corridor 4",
+                "color": "#22c55e",
+                "terminals": ["Devanahalli", "Heelalige"],
+                "station_count": len(corridor_4_stations),
+                "segment_ids": list(range(301, 318)),
+            },
+        ]
+
+        return {
+            "scenario": "Bengaluru Suburban Rail Network",
+            "city": "Bengaluru",
+            "nodes": nodes,
+            "edges": edges,
+            "corridors": corridors_info,
+            "interchange_segment_ids": [501, 502, 503],
+            "total_segments": len(edges),
+            "total_stations": len(nodes),
+        }
+
+    def reroute_bengaluru(self, blocked_segment_ids, segment_overrides=None):
+        """
+        Dynamically reroute the Bengaluru network given blocked segments.
+        
+        Args:
+            blocked_segment_ids: list of segment IDs that are blocked
+            segment_overrides: dict of {segment_id: {param: value}} for custom params
+        
+        Returns:
+            Per-corridor routing results + overall network status
+        """
+        # Get the base case study data
+        case_data = self.get_bengaluru_case_study()
+        edges = case_data["edges"]
+        nodes = case_data["nodes"]
+
+        # Apply segment overrides
+        if segment_overrides:
+            for edge in edges:
+                sid = str(edge["segment_id"])
+                if sid in segment_overrides:
+                    for key, val in segment_overrides[sid].items():
+                        if key in edge:
+                            edge[key] = val
+
+        # Build a NetworkX graph
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node["id"], **{k: v for k, v in node.items() if k != "id"})
+
+        for edge in edges:
+            sid = edge["segment_id"]
+            is_blocked = sid in blocked_segment_ids or edge.get("is_blocked", False)
+            edge["is_blocked"] = is_blocked
+            if not is_blocked:
+                G.add_edge(
+                    edge["source"],
+                    edge["target"],
+                    segment_id=sid,
+                    weight=edge["time_min"],
+                    length_km=edge["length_km"],
+                    time_min=edge["time_min"],
+                    corridor=edge["corridor"],
+                )
+
+        # Compute routes for each corridor
+        corridor_results = []
+        for corridor in case_data["corridors"]:
+            src, dst = corridor["terminals"]
+            try:
+                path = nx.shortest_path(G, source=src, target=dst, weight="weight")
+                
+                # Calculate totals
+                total_time = 0
+                total_distance = 0
+                path_segments = []
+                uses_other_corridor = False
+                
+                for i in range(len(path) - 1):
+                    edge_data = G.get_edge_data(path[i], path[i + 1])
+                    total_time += edge_data["time_min"]
+                    total_distance += edge_data["length_km"]
+                    path_segments.append({
+                        "from": path[i],
+                        "to": path[i + 1],
+                        "segment_id": edge_data["segment_id"],
+                        "corridor": edge_data["corridor"],
+                    })
+                    if edge_data["corridor"] != corridor["id"] and edge_data["corridor"] != 0:
+                        uses_other_corridor = True
+
+                # Calculate optimal time (all own-corridor segments unblocked)
+                optimal_time = len(corridor["segment_ids"]) * 5  # default 5 min each
+                delay = max(0, total_time - optimal_time)
+
+                corridor_results.append({
+                    "corridor_id": corridor["id"],
+                    "corridor_name": corridor["name"],
+                    "corridor_color": corridor["color"],
+                    "source": src,
+                    "destination": dst,
+                    "path_found": True,
+                    "path_blocked": False,
+                    "stations_involved": path,
+                    "path_segments": path_segments,
+                    "total_time_min": total_time,
+                    "total_distance_km": total_distance,
+                    "optimal_time_min": optimal_time,
+                    "delay_min": delay,
+                    "segment_count": len(path_segments),
+                    "uses_other_corridor": uses_other_corridor,
+                    "is_rerouted": uses_other_corridor or delay > 0,
+                })
+
+            except nx.NetworkXNoPath:
+                corridor_results.append({
+                    "corridor_id": corridor["id"],
+                    "corridor_name": corridor["name"],
+                    "corridor_color": corridor["color"],
+                    "source": src,
+                    "destination": dst,
+                    "path_found": False,
+                    "path_blocked": True,
+                    "stations_involved": [],
+                    "path_segments": [],
+                    "total_time_min": None,
+                    "total_distance_km": None,
+                    "optimal_time_min": None,
+                    "delay_min": None,
+                    "segment_count": 0,
+                    "uses_other_corridor": False,
+                    "is_rerouted": False,
+                })
+
+        # Count blocked segments per corridor
+        blocked_per_corridor = {}
+        for edge in edges:
+            if edge["is_blocked"]:
+                c = edge["corridor"]
+                blocked_per_corridor[c] = blocked_per_corridor.get(c, 0) + 1
+
+        # Overall network health
+        total_corridors = len(corridor_results)
+        operational = sum(1 for r in corridor_results if r["path_found"])
+        severed = total_corridors - operational
+
+        return {
+            "corridor_results": corridor_results,
+            "blocked_segment_ids": blocked_segment_ids,
+            "blocked_per_corridor": blocked_per_corridor,
+            "network_status": {
+                "total_corridors": total_corridors,
+                "operational": operational,
+                "severed": severed,
+                "health_pct": round((operational / total_corridors) * 100, 1),
+                "status": "FULLY OPERATIONAL" if severed == 0 else (
+                    "PARTIALLY SEVERED" if operational > 0 else "COMPLETELY SEVERED"
+                ),
+            },
+            # Return updated edges/nodes for frontend rendering
+            "graph_data": {
+                "nodes": nodes,
+                "edges": edges,
+            },
+        }
