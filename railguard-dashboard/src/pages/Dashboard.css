@@ -1307,3 +1307,90 @@
   color: #e2e8f0;
   font-size: 0.938rem;
 }
+
+/* Report Markdown */
+.report-markdown {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+
+/* Master Network View */
+.network-master-view {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.network-stats {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  padding-bottom: 15px;
+}
+
+.stat-item .label {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.stat-item .value {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.text-light {
+  color: #e2e8f0;
+}
+
+.operational {
+  color: #10b981;
+}
+
+.severed {
+  color: #ef4444;
+}
+
+/* PDF Export Mode Overrides */
+.pdf-export-mode {
+  background: #ffffff !important;
+}
+
+.pdf-export-mode h3,
+.pdf-export-mode h4,
+.pdf-export-mode p,
+.pdf-export-mode span,
+.pdf-export-mode strong,
+.pdf-export-mode div,
+.pdf-export-mode .report-markdown,
+.pdf-export-mode .fault-name,
+.pdf-export-mode .metric-row span,
+.pdf-export-mode .metric-row strong,
+.pdf-export-mode .stat-item .label,
+.pdf-export-mode .text-light {
+  color: #0f172a !important;
+}
+
+.pdf-export-mode .network-master-view,
+.pdf-export-mode .metric-row {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Preserve specific colors in PDF Export */
+.pdf-export-mode .operational {
+  color: #10b981 !important;
+}
+
+.pdf-export-mode .severed {
+  color: #ef4444 !important;
+}
+
+.pdf-export-mode .fault-count {
+  color: #0f172a !important;
+}
