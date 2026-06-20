@@ -49,6 +49,7 @@ export interface SegmentResult {
   action: string;
   explanation?: string;
   diversion_plan?: DiversionPlan;
+  weather_condition?: string;
 }
 
 export interface FaultDistribution {
@@ -61,6 +62,7 @@ export interface NetworkSummaryStructured {
   fault_distribution: FaultDistribution;
   average_confidence: number;
   critical_count: number;
+  weather_stress_alerts?: number;
 }
 
 export interface NetworkPath {

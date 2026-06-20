@@ -50,15 +50,15 @@ const LandingPage: React.FC = () => {
             <Train size={20} />
             Track Maintenance
           </button>
-          <button className="btn-hero-secondary" onClick={() => navigate('/apu-dashboard')}>
+          {/* <button className="btn-hero-secondary" onClick={() => navigate('/apu-dashboard')}>
             <Activity size={20} />
             Metro APU Dashboard
-          </button>
+          </button> */}
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="stats-section">
+      {/* <section className="stats-section">
         <div className="stat-card">
           <div className="stat-value">99.2%</div>
           <div className="stat-label">Prediction Accuracy</div>
@@ -75,7 +75,7 @@ const LandingPage: React.FC = () => {
           <div className="stat-value">24/7</div>
           <div className="stat-label">Monitoring</div>
         </div>
-      </section>
+      </section> */}
 
       {/* Features Section */}
       <section className="features-section">

@@ -1,0 +1,513 @@
+/* ============================================
+   Bengaluru Suburban Rail Network — Case Study
+   Premium dark-mode styling with corridor colors
+   ============================================ */
+
+/* --- Main Container --- */
+.blr-case-study {
+  animation: blrFadeIn 0.5s ease-out;
+}
+
+@keyframes blrFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Header --- */
+.blr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.blr-header h2 {
+  color: #f1f5f9;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.blr-header h2 .city-badge {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.blr-close-btn {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.blr-close-btn:hover {
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* --- Network Stats Bar --- */
+.blr-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.blr-stat-card {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 12px;
+  padding: 16px 18px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.blr-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--stat-color, #3b82f6);
+  border-radius: 12px 12px 0 0;
+}
+
+.blr-stat-card:hover {
+  border-color: rgba(148, 163, 184, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.blr-stat-card .stat-label {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.blr-stat-card .stat-value {
+  color: #f1f5f9;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.blr-stat-card .stat-value.operational { color: #22c55e; }
+.blr-stat-card .stat-value.severed { color: #ef4444; }
+.blr-stat-card .stat-value.warning { color: #f59e0b; }
+.blr-stat-card .stat-value.partial { color: #eab308; }
+
+/* --- Corridor Status Cards --- */
+.blr-corridor-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.blr-corridor-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 12px;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.blr-corridor-card:hover {
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.blr-corridor-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  bottom: 0;
+  background: var(--corridor-color);
+  border-radius: 12px 0 0 12px;
+}
+
+.blr-corridor-card .corridor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.blr-corridor-card .corridor-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.blr-corridor-card .corridor-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.blr-corridor-card .corridor-status.found {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.blr-corridor-card .corridor-status.rerouted {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.blr-corridor-card .corridor-status.blocked {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.blr-corridor-card .corridor-route {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+}
+
+.blr-corridor-card .corridor-metrics {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.blr-corridor-card .metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.blr-corridor-card .metric .m-label {
+  font-size: 0.65rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.blr-corridor-card .metric .m-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.blr-corridor-card .metric .m-value.delay {
+  color: #f59e0b;
+}
+
+/* --- Segment Controls Panel --- */
+.blr-controls-panel {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.blr-controls-panel h3 {
+  color: #e2e8f0;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blr-controls-panel .controls-subtitle {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+}
+
+.blr-segment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.blr-segment-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(15, 23, 42, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  position: relative;
+}
+
+.blr-segment-chip:hover {
+  border-color: rgba(148, 163, 184, 0.4);
+  background: rgba(30, 41, 59, 0.8);
+  transform: scale(1.05);
+}
+
+.blr-segment-chip.blocked {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.blr-segment-chip.selected {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+}
+
+.blr-segment-chip .chip-corridor-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+/* --- Selected Segment Editor --- */
+.blr-segment-editor {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 10px;
+  padding: 18px;
+  margin-top: 16px;
+  animation: blrSlideDown 0.25s ease-out;
+}
+
+@keyframes blrSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.blr-segment-editor h4 {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 14px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blr-segment-editor .editor-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.blr-segment-editor .editor-row label {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  min-width: 130px;
+  font-weight: 500;
+}
+
+.blr-segment-editor .editor-row input[type="range"] {
+  flex: 1;
+  accent-color: #3b82f6;
+  height: 4px;
+}
+
+.blr-segment-editor .editor-row .editor-value {
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* --- Action Buttons --- */
+.blr-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.blr-btn-reroute {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  padding: 12px 28px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.blr-btn-reroute:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.blr-btn-reroute:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.blr-btn-reset {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.blr-btn-reset:hover {
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+}
+
+/* --- Network Map Section --- */
+.blr-map-section {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.blr-map-section h3 {
+  color: #e2e8f0;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- Legend --- */
+.blr-legend {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.blr-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.blr-legend-item .legend-line {
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.blr-legend-item .legend-line.dashed {
+  border-top: 2px dashed;
+  height: 0;
+  background: none;
+}
+
+.blr-legend-item .legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid;
+}
+
+/* --- Blocked Segment Counter --- */
+.blr-blocked-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.blr-blocked-counter .counter-badge {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* --- Pulse animation for blocked --- */
+@keyframes blrPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.blr-segment-chip.blocked {
+  animation: blrPulse 2s ease-in-out infinite;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .blr-stats-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .blr-corridor-results {
+    grid-template-columns: 1fr;
+  }
+  .blr-segment-grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  }
+}

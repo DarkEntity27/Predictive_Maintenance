@@ -77,6 +77,10 @@ class BatchRequest(BaseModel):
 
 class NetworkRequest(BaseModel):
     segments: List[SegmentInput]
+
+class BengaluruRerouteRequest(BaseModel):
+    blocked_segments: List[int] = []
+    segment_overrides: dict = {}
 # -----------------------------
 # Static feature importance
 # (from trained RF model)
@@ -150,6 +154,29 @@ def get_mumbai_case_study():
     return service.diversion_service.get_mumbai_case_study()
 
 
+@app.get("/case-study/bengaluru")
+def get_bengaluru_case_study():
+    """
+    Get Bengaluru Suburban Rail Network topology with 4 corridors.
+    
+    Returns the full network graph (nodes, edges, corridors) with
+    editable segment parameters for interactive rerouting.
+    """
+    return service.diversion_service.get_bengaluru_case_study()
+
+
+@app.post("/case-study/bengaluru/reroute")
+def reroute_bengaluru(request: BengaluruRerouteRequest):
+    """
+    Compute rerouting for Bengaluru network with blocked segments.
+    
+    Accepts list of blocked segment IDs and optional parameter overrides.
+    Returns per-corridor routing results and overall network health status.
+    """
+    return service.diversion_service.reroute_bengaluru(
+        blocked_segment_ids=request.blocked_segments,
+        segment_overrides=request.segment_overrides,
+    )
 
 # -----------------------------
 # APU Prediction Models & Logic
