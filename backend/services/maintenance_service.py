@@ -68,6 +68,7 @@ class MaintenanceService:
 
             results.append({
                 "segment_id": segment["segment_id"],
+                "features": segment["features"],
                 **result
             })
 

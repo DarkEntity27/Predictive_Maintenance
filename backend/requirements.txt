@@ -19,3 +19,4 @@ anthropic==0.42.0
 
 # CORS
 python-multipart==0.0.20
+networkx

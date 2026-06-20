@@ -19,6 +19,7 @@ import {
   MapPin,
   RotateCcw,
   RefreshCw,
+  CloudRain,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 // @ts-ignore
@@ -878,6 +879,21 @@ const Dashboard: React.FC = () => {
                           <div className="metric-sublabel">Model prediction accuracy</div>
                         </div>
                       </div>
+
+                      {assessmentData.network_summary.structured.weather_stress_alerts !== undefined && (
+                        <div className="metric-card">
+                          <div className={`metric-icon ${assessmentData.network_summary.structured.weather_stress_alerts > 0 ? 'warning' : 'info'}`}>
+                            <CloudRain size={24} />
+                          </div>
+                          <div className="metric-content">
+                            <div className="metric-value">
+                              {assessmentData.network_summary.structured.weather_stress_alerts}
+                            </div>
+                            <div className="metric-label">Weather Alerts</div>
+                            <div className="metric-sublabel">Stress factor boosted</div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="ai-summary-section">
@@ -1007,7 +1023,15 @@ const Dashboard: React.FC = () => {
                                 <span className="segment-id-badge">{seg.segment_id}</span>
                               </td>
                               <td>
-                                <span className="fault-badge">{seg.fault.replace(/_/g, ' ')}</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <span className="fault-badge">{seg.fault.replace(/_/g, ' ')}</span>
+                                  {seg.weather_condition && (
+                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <CloudRain size={10} />
+                                      {seg.weather_condition}
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                               <td>
                                 <div className="confidence-bar">
